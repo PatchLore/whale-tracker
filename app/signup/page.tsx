@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export const dynamic = 'force-dynamic';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") ?? "/dashboard";
@@ -143,6 +143,18 @@ export default function SignupPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ background: "#060501", minHeight: "100vh" }} />
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }
 
