@@ -1,14 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let client: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  // These errors surface during development if env vars are missing.
-  // In production you may want to handle this differently.
-  // eslint-disable-next-line no-console
-  console.warn("Supabase client: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.");
+export function getSupabaseBrowserClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  if (client) return client;
+  client = createClient(url, key);
+  return client;
 }
-
-export const supabaseBrowserClient = createClient(supabaseUrl, supabaseAnonKey);
 

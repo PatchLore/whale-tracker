@@ -1,8 +1,10 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+export const dynamic = 'force-dynamic';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -26,7 +28,14 @@ export default function SignupPage() {
       redirectTo
     )}`;
 
-    const { data, error } = await supabaseBrowserClient.auth.signUp({
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      setError("Supabase is not configured.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -43,7 +52,7 @@ export default function SignupPage() {
     // Create a profile row for the new user (if we have the user id).
     const user = data.user;
     if (user) {
-      const { error: profileError } = await supabaseBrowserClient
+      const { error: profileError } = await supabase
         .from("profiles")
         .insert({
           id: user.id,

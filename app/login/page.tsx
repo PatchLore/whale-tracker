@@ -1,8 +1,10 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+export const dynamic = 'force-dynamic';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +24,14 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
 
-    const { data, error } = await supabaseBrowserClient.auth.signInWithPassword({
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      setError("Supabase is not configured.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -47,12 +56,19 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
 
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setLoading(false);
+      setError("Supabase is not configured.");
+      return;
+    }
+
     const redirectBase = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const emailRedirectTo = `${redirectBase}/auth/callback?redirect=${encodeURIComponent(
       redirectTo
     )}`;
 
-    const { error } = await supabaseBrowserClient.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo

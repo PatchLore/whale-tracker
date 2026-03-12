@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { supabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usePolling } from "@/lib/hooks/usePolling";
 import type { Tier, WalletChain, Wallet, Transaction } from "@/types/supabase";
 
@@ -47,13 +47,18 @@ export function DashboardClient({
     // On mount, refresh from Supabase to ensure fresh state.
     const load = async () => {
       setIsLoadingWallets(true);
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setIsLoadingWallets(false);
+        return;
+      }
       const [{ data: walletData }, { data: txData }] = await Promise.all([
-        supabaseBrowserClient
+        supabase
           .from("wallets")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: true }),
-        supabaseBrowserClient
+        supabase
           .from("transactions")
           .select("*")
           .order("created_at", { ascending: false })
@@ -146,7 +151,14 @@ export function DashboardClient({
       return;
     }
 
-    const { data, error } = await supabaseBrowserClient
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    const { data, error } = await supabase
       .from("wallets")
       .insert({
         user_id: userId,
@@ -168,7 +180,14 @@ export function DashboardClient({
   };
 
   const handleRemoveWallet = async (walletId: string) => {
-    const { error } = await supabaseBrowserClient
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    const { error } = await supabase
       .from("wallets")
       .delete()
       .eq("id", walletId);

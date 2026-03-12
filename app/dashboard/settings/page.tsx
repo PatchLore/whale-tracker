@@ -1,9 +1,9 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SettingsClient } from "./SettingsClient";
 import type { Tier } from "@/types/supabase";
-
-export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const supabase = createServerSupabaseClient();

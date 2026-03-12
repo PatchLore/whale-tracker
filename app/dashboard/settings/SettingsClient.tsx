@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Tier } from "@/types/supabase";
 
 type SettingsClientProps = {
@@ -32,7 +32,15 @@ export function SettingsClient({
     const trimmedTelegram = telegram.trim();
     const numericThreshold = Number(threshold || "10");
 
-    const { error } = await supabaseBrowserClient
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setSaving(false);
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    const { error } = await supabase
       .from("profiles")
       .update({
         telegram_chat_id: trimmedTelegram || null,
@@ -53,7 +61,10 @@ export function SettingsClient({
 
   const handleSignOut = async () => {
     setSigningOut(true);
-    await supabaseBrowserClient.auth.signOut();
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push("/login");
   };
 
