@@ -49,23 +49,6 @@ function SignupForm() {
       return;
     }
 
-    // Create a profile row for the new user (if we have the user id).
-    const user = data.user;
-    if (user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: user.id,
-          email,
-          tier: "free"
-        });
-
-      if (profileError) {
-        // Non-fatal; surface to the user but do not block signup.
-        setError(`Account created but profile setup failed: ${profileError.message}`);
-      }
-    }
-
     setLoading(false);
     setMessage("Check your email to confirm your account.");
   };
