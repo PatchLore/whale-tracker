@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #060501;
+  --surface: #0a0800;
+  --card: #0f0c01;
+  --card2: #141005;
+  --border: #2a1f00;
+  --border2: #3d2e00;
+  --amber: #ffb300;
+  --amber2: #ff8c00;
+  --amber3: #ffd54f;
+  --red: #ff3d2e;
+  --green: #39ff6e;
+  --blue: #00cfff;
+  --muted: #5a4500;
+  --text: #d4a800;
+  --text2: #8a6a00;
+  --dim: #3a2a00;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Scanline overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 179, 0, 0.012) 2px,
+    rgba(255, 179, 0, 0.012) 4px
+  );
+  pointer-events: none;
+}
+
+/* Grid texture */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 179, 0, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 179, 0, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
