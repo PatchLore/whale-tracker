@@ -2,29 +2,21 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const priceId = process.env.STRIPE_PRO_PRICE_ID;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-if (!stripeSecretKey) {
-  // eslint-disable-next-line no-console
-  console.warn("STRIPE_SECRET_KEY is not set. Stripe checkout will not work.");
-}
-
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, {
-      apiVersion: "2026-02-25.clover"
-    })
-  : null;
-
 export async function POST() {
   try {
-    if (!stripe || !priceId) {
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRO_PRICE_ID) {
       return NextResponse.json(
-        { error: "Stripe is not configured" },
+        { error: "Stripe not configured" },
         { status: 500 }
       );
     }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2026-02-25.clover"
+    });
+
+    const priceId = process.env.STRIPE_PRO_PRICE_ID;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
     const supabase = createServerSupabaseClient();
     const {

@@ -1,18 +1,18 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabaseServiceClient } from "@/lib/supabase/service";
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY!;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2026-02-25.clover"
-});
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: "Stripe not configured" },
+      { status: 500 }
+    );
+  }
+
   const sig = headers().get("stripe-signature");
 
   if (!sig) {
@@ -24,7 +24,15 @@ export async function POST(request: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2026-02-25.clover"
+    });
+
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown webhook error";
     return NextResponse.json({ error: `Webhook signature error: ${msg}` }, { status: 400 });
@@ -37,7 +45,8 @@ export async function POST(request: Request) {
         const supabaseUserId = session.metadata?.supabaseUserId;
 
         if (supabaseUserId) {
-          await supabaseServiceClient
+          const supabase = createServerSupabaseClient();
+          await supabase
             .from("profiles")
             .update({ tier: "pro" })
             .eq("id", supabaseUserId);
@@ -49,7 +58,8 @@ export async function POST(request: Request) {
         const supabaseUserId = subscription.metadata?.supabaseUserId;
 
         if (supabaseUserId) {
-          await supabaseServiceClient
+          const supabase = createServerSupabaseClient();
+          await supabase
             .from("profiles")
             .update({ tier: "free" })
             .eq("id", supabaseUserId);
