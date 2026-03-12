@@ -7,7 +7,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY!;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2024-06-20"
+  apiVersion: "2026-02-25.clover"
 });
 
 export const dynamic = "force-dynamic";

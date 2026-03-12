@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
+export function middleware(req: NextRequest) {
   const isDashboardRoute = req.nextUrl.pathname.startsWith("/dashboard");
 
-  if (isDashboardRoute && !session) {
+  // Supabase sets an access token cookie; if it's missing, treat user as unauthenticated.
+  const hasSessionCookie =
+    !!req.cookies.get("sb-access-token") || !!req.cookies.get("sb-refresh-token");
+
+  if (isDashboardRoute && !hasSessionCookie) {
     const redirectUrl = new URL("/login", req.url);
     redirectUrl.searchParams.set(
       "redirect",
@@ -21,7 +17,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {

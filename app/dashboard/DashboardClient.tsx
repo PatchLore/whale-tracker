@@ -534,7 +534,6 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
     <form
       onSubmit={handleSubmit}
       className="mb-4 flex flex-col gap-2 text-[11px]"
-      aria-disabled={isDisabled}
     >
       <div>
         <div
