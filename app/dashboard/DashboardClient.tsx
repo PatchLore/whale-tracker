@@ -815,7 +815,15 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
     setSaving(true);
     const trimmed = input.trim();
 
-    const { error } = await supabaseBrowserClient
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setSaving(false);
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    const { error } = await supabase
       .from("profiles")
       .update({ telegram_chat_id: trimmed || null })
       .eq("id", userId);
