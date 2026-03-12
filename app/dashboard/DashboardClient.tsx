@@ -267,7 +267,7 @@ function Header() {
           className="mt-2 text-[10px] tracking-[0.35em] uppercase"
           style={{ color: "var(--muted)", fontFamily: "var(--font-plex-mono)" }}
         >
-          // REAL-TIME WALLET INTELLIGENCE · TRACK · ALERT · FOLLOW
+          {/* REAL-TIME WALLET INTELLIGENCE · TRACK · ALERT · FOLLOW */}
         </p>
       </div>
       <div className="flex flex-col items-end gap-2 text-[10px]">

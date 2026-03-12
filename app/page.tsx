@@ -10,7 +10,7 @@ export default function Home() {
             className="text-xs tracking-[0.35em] uppercase"
             style={{ color: "var(--muted)", fontFamily: "var(--font-plex-mono)" }}
           >
-            // Whale Wallet Intelligence
+            {/* Whale Wallet Intelligence */}
           </div>
           <h1
             className="mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
