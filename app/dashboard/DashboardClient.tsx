@@ -243,6 +243,37 @@ export function DashboardClient({
     setTransactions(prev => prev.filter(t => t.wallet_id !== walletId));
   };
 
+  const handleUpdateWalletThreshold = async (
+    walletId: string,
+    newThreshold: number
+  ) => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    console.log("[updateWallet] updating threshold:", walletId, newThreshold);
+    const { error } = await supabase
+      .from("wallets")
+      .update({ threshold: newThreshold })
+      .eq("id", walletId);
+    console.log("[updateWallet] result:", error);
+
+    if (error) {
+      // eslint-disable-next-line no-alert
+      alert(error.message);
+      return;
+    }
+
+    setWallets(prev =>
+      prev.map(w =>
+        w.id === walletId ? { ...w, threshold: newThreshold } : w
+      )
+    );
+  };
+
   return (
     <div className="relative z-10 mx-auto max-w-5xl px-5 pt-7 pb-20">
       {showUpgradeToast && (
@@ -287,6 +318,7 @@ export function DashboardClient({
             wallets={wallets}
             onAddWallet={handleAddWallet}
             onRemoveWallet={handleRemoveWallet}
+            onUpdateWalletThreshold={handleUpdateWalletThreshold}
             isLoading={isLoadingWallets}
             userId={resolvedUserId ?? ""}
             telegramChatId={telegramChatIdState}
@@ -441,6 +473,7 @@ type WalletRegistryProps = {
     threshold: number;
   }) => void;
   onRemoveWallet: (walletId: string) => void;
+  onUpdateWalletThreshold: (walletId: string, newThreshold: number) => void;
   userId: string;
   telegramChatId: string | null;
   onTelegramChatIdChange: (value: string | null) => void;
@@ -455,6 +488,7 @@ function WalletRegistry({
   isLoading,
   onAddWallet,
   onRemoveWallet,
+  onUpdateWalletThreshold,
   userId,
   telegramChatId,
   onTelegramChatIdChange,
@@ -519,6 +553,9 @@ function WalletRegistry({
               <WalletCard
                 key={w.id}
                 wallet={w}
+                onUpdateThreshold={newThreshold =>
+                  onUpdateWalletThreshold(w.id, newThreshold)
+                }
                 onRemove={() => onRemoveWallet(w.id)}
               />
             ))
@@ -714,10 +751,23 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
 
 type WalletCardProps = {
   wallet: Wallet;
+  onUpdateThreshold: (newThreshold: number) => void;
   onRemove: () => void;
 };
 
-function WalletCard({ wallet, onRemove }: WalletCardProps) {
+function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
+  const [thresholdInput, setThresholdInput] = useState(
+    wallet.threshold != null ? wallet.threshold.toString() : ""
+  );
+
+  const commitThreshold = () => {
+    const numeric = Number(thresholdInput || "0");
+    if (Number.isNaN(numeric) || numeric <= 0) {
+      return;
+    }
+    onUpdateThreshold(numeric);
+  };
+
   return (
     <div
       className="relative rounded-lg border px-3 py-3"
@@ -769,7 +819,26 @@ function WalletCard({ wallet, onRemove }: WalletCardProps) {
             Threshold
           </div>
           <div style={{ color: "var(--amber)" }}>
-            {wallet.threshold ?? "—"} ETH
+            <input
+              type="number"
+              className="w-20 rounded border px-2 py-0.5 text-[10px]"
+              style={{
+                backgroundColor: "transparent",
+                borderColor: "var(--border2)",
+                color: "var(--amber3)",
+                fontFamily: "var(--font-plex-mono)"
+              }}
+              value={thresholdInput}
+              onChange={e => setThresholdInput(e.target.value)}
+              onBlur={commitThreshold}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitThreshold();
+                }
+              }}
+            />{" "}
+            ETH
           </div>
         </div>
       </div>
