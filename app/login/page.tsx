@@ -20,6 +20,10 @@ function LoginForm() {
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Debug: confirm handler is firing
+    // eslint-disable-next-line no-console
+    console.log("[login] handlePasswordLogin submit", { email });
+
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -28,6 +32,8 @@ function LoginForm() {
     if (!supabase) {
       setLoading(false);
       setError("Supabase is not configured.");
+       // eslint-disable-next-line no-console
+       console.error("[login] Supabase client is null. Check env vars.");
       return;
     }
 
@@ -35,6 +41,10 @@ function LoginForm() {
       email,
       password
     });
+
+    // Debug: log raw response
+    // eslint-disable-next-line no-console
+    console.log("[login] signInWithPassword result", { data, error });
 
     setLoading(false);
 
@@ -44,6 +54,8 @@ function LoginForm() {
     }
 
     if (data.session) {
+      // eslint-disable-next-line no-console
+      console.log("[login] successful login, redirecting", { redirectTo });
       router.push(redirectTo);
     } else {
       setMessage("Check your email to confirm your login.");
