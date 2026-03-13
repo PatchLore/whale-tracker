@@ -97,7 +97,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const txs = etherscanJson.result;
+    const txList = etherscanJson.result as EtherscanTx[];
+    // Only consider the most recent 50 transactions to keep inserts manageable.
+    const txs = txList.slice(0, 50);
 
     const supabase = createServerSupabaseClient();
 
@@ -152,22 +154,35 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("transactions")
-      .insert(newRows)
-      .select("*");
+    // Insert in chunks to avoid exceeding limits on large batches.
+    const chunkSize = 25;
+    let allInserted: Transaction[] = [];
+    for (let i = 0; i < newRows.length; i += chunkSize) {
+      const chunk = newRows.slice(i, i + chunkSize);
+      // eslint-disable-next-line no-await-in-loop
+      const { data, error } = await supabase
+        .from("transactions")
+        .insert(chunk)
+        .select("*");
+      if (error) {
+        console.error("[poll] chunk insert error:", error.message);
+        break;
+      }
+      if (data) {
+        allInserted = [...allInserted, ...(data as Transaction[])];
+      }
+    }
 
-    console.log("[poll] insert error:", insertError);
-    console.log("[poll] inserted count:", inserted?.length);
+    console.log("[poll] inserted count:", allInserted.length);
 
-    if (insertError || !inserted) {
+    if (allInserted.length === 0) {
       return NextResponse.json(
-        { error: insertError?.message ?? "Failed to insert transactions" },
-        { status: 500 }
+        { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
+        { status: 200 }
       );
     }
 
-    const insertedTxns = inserted as Transaction[];
+    const insertedTxns = allInserted;
     const whaleAlerts = insertedTxns.filter(t => t.is_whale);
 
     return NextResponse.json(
