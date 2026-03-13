@@ -927,6 +927,9 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[telegram] save clicked", { userId, value: input });
+    // eslint-disable-next-line no-alert
+    alert("save telegram clicked");
     setSaving(true);
     const trimmed = input.trim();
 
