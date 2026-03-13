@@ -80,7 +80,11 @@ export function DashboardClient({
         setIsLoadingWallets(false);
         return;
       }
-      const [{ data: walletData }, { data: txData }] = await Promise.all([
+      const [
+        { data: walletData },
+        { data: txData },
+        { data: profile }
+      ] = await Promise.all([
         supabase
           .from("wallets")
           .select("*")
@@ -89,7 +93,12 @@ export function DashboardClient({
         supabase
           .from("transactions")
           .select("*")
-          .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("telegram_chat_id")
+          .eq("id", resolvedUserId)
+          .single()
       ]);
 
       if (walletData) {
@@ -97,6 +106,9 @@ export function DashboardClient({
       }
       if (txData) {
         setTransactions(txData as Transaction[]);
+      }
+      if (profile?.telegram_chat_id) {
+        setTelegramChatIdState(profile.telegram_chat_id);
       }
       setIsLoadingWallets(false);
     };
