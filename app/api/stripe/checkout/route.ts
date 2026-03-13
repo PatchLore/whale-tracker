@@ -25,25 +25,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1
-        }
-      ],
-      metadata: {
-        supabaseUserId: userId
-      },
-      success_url: `${appUrl}/dashboard?upgraded=true`,
-      cancel_url: `${appUrl}/dashboard`
-    });
+    try {
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1
+          }
+        ],
+        metadata: {
+          supabaseUserId: userId
+        },
+        success_url: `${appUrl}/dashboard?upgraded=true`,
+        cancel_url: `${appUrl}/dashboard`
+      });
 
-    return NextResponse.json(
-      { url: checkoutSession.url },
-      { status: 200 }
-    );
+      return NextResponse.json(
+        { url: checkoutSession.url },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      // Log Stripe-specific errors for easier debugging
+      console.error("[stripe/checkout] Stripe error:", err?.message ?? err);
+      return NextResponse.json(
+        { error: err?.message ?? "Stripe checkout error" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
