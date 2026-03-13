@@ -221,6 +221,8 @@ export function DashboardClient({
   };
 
   const handleRemoveWallet = async (walletId: string) => {
+    console.log("[wallets] remove clicked", walletId);
+
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       // eslint-disable-next-line no-alert
@@ -241,6 +243,8 @@ export function DashboardClient({
 
     setWallets(prev => prev.filter(w => w.id !== walletId));
     setTransactions(prev => prev.filter(t => t.wallet_id !== walletId));
+
+    console.log("[wallets] removed wallet and related transactions", walletId);
   };
 
   const handleUpdateWalletThreshold = async (
