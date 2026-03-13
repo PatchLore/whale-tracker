@@ -41,13 +41,38 @@ export function DashboardClient({
   const [hasRequestedNotifications, setHasRequestedNotifications] = useState(false);
   const [showUpgradeToast, setShowUpgradeToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const resolvedUserId = userId ?? "";
+  const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
 
   const walletLimit = tier === "pro" ? PRO_LIMIT : FREE_LIMIT;
 
+  // Client-side auth: ensure we have a user ID and update resolvedUserId
   useEffect(() => {
-    // On mount, refresh from Supabase to ensure fresh state.
+    const checkAuth = async () => {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) return;
+
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+      if (!session?.user?.id) {
+        // If not authenticated, send back to login
+        router.push("/login?redirect=/dashboard");
+        return;
+      }
+
+      setResolvedUserId(session.user.id);
+      // Debug log to confirm timing
+      console.log("[dashboard] set resolvedUserId from session:", session.user.id);
+    };
+
+    void checkAuth();
+  }, [router]);
+
+  // Load wallets/transactions whenever resolvedUserId is available
+  useEffect(() => {
+    if (!resolvedUserId) return;
+
     const load = async () => {
       setIsLoadingWallets(true);
       const supabase = getSupabaseBrowserClient();
@@ -59,7 +84,7 @@ export function DashboardClient({
         supabase
           .from("wallets")
           .select("*")
-          .eq("user_id", userId)
+          .eq("user_id", resolvedUserId)
           .order("created_at", { ascending: true }),
         supabase
           .from("transactions")
@@ -77,7 +102,7 @@ export function DashboardClient({
     };
 
     void load();
-  }, [userId]);
+  }, [resolvedUserId]);
 
   // Show upgrade toast once when coming back from Stripe
   useEffect(() => {
@@ -506,7 +531,7 @@ function WalletRegistry({
           onChange={onTelegramChatIdChange}
         />
 
-        <ProBanner tier={tier} />
+        <ProBanner tier={tier} userId={resolvedUserId ?? ""} />
       </div>
     </section>
   );
@@ -754,9 +779,10 @@ function WalletCard({ wallet, onRemove }: WalletCardProps) {
 
 type ProBannerProps = {
   tier: Tier;
+  userId: string;
 };
 
-function ProBanner({ tier }: ProBannerProps) {
+function ProBanner({ tier, userId }: ProBannerProps) {
   if (tier === "pro") return null;
 
   return (
@@ -793,7 +819,11 @@ function ProBanner({ tier }: ProBannerProps) {
         onClick={async () => {
           try {
             const res = await fetch("/api/stripe/checkout", {
-              method: "POST"
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ userId })
             });
             if (!res.ok) {
               // eslint-disable-next-line no-alert

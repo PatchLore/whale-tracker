@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRO_PRICE_ID) {
       return NextResponse.json(
@@ -18,19 +17,13 @@ export async function POST() {
     const priceId = process.env.STRIPE_PRO_PRICE_ID;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-    const supabase = createServerSupabaseClient();
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
-
-    if (!session || !session.user) {
+    const { userId } = (await req.json()) as { userId?: string };
+    if (!userId) {
       return NextResponse.json(
-        { error: "Not authenticated" },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const user = session.user;
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -40,9 +33,8 @@ export async function POST() {
           quantity: 1
         }
       ],
-      customer_email: user.email ?? undefined,
       metadata: {
-        supabaseUserId: user.id
+        supabaseUserId: userId
       },
       success_url: `${appUrl}/dashboard?upgraded=true`,
       cancel_url: `${appUrl}/dashboard`
