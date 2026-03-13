@@ -63,10 +63,10 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      userId={userId}
-      tier={tier}
-      telegramChatId={telegramChatId}
-      defaultThreshold={defaultThreshold}
+      userId={userId ?? ""}
+      tier={tier ?? "free"}
+      telegramChatId={telegramChatId ?? ""}
+      defaultThreshold={defaultThreshold ?? 0}
       initialWallets={(wallets ?? []) as Wallet[]}
       initialTransactions={(transactions ?? []) as Transaction[]}
     />
