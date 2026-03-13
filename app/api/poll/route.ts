@@ -81,6 +81,15 @@ export async function POST(request: Request) {
       result: EtherscanTx[] | string;
     };
 
+    console.log("[poll] etherscan status:", etherscanJson.status);
+    console.log("[poll] etherscan message:", etherscanJson.message);
+    console.log(
+      "[poll] transactions count:",
+      Array.isArray(etherscanJson.result)
+        ? etherscanJson.result.length
+        : etherscanJson.result
+    );
+
     if (etherscanJson.status !== "1" || !Array.isArray(etherscanJson.result)) {
       return NextResponse.json(
         { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
@@ -134,6 +143,8 @@ export async function POST(request: Request) {
         };
       });
 
+    console.log("[poll] new rows to insert:", newRows.length);
+
     if (newRows.length === 0) {
       return NextResponse.json(
         { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
@@ -145,6 +156,9 @@ export async function POST(request: Request) {
       .from("transactions")
       .insert(newRows)
       .select("*");
+
+    console.log("[poll] insert error:", insertError);
+    console.log("[poll] inserted count:", inserted?.length);
 
     if (insertError || !inserted) {
       return NextResponse.json(
