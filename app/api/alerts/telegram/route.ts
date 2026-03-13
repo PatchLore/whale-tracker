@@ -10,6 +10,16 @@ export async function POST(request: Request) {
     const body = (await request.json()) as TelegramRequestBody;
     const { chatId, message } = body;
 
+    console.log(
+      "[telegram route] received body:",
+      JSON.stringify(body)
+    );
+    console.log("[telegram route] chatId:", chatId);
+    console.log(
+      "[telegram route] message length:",
+      message?.length
+    );
+
     if (!chatId || !message) {
       return NextResponse.json(
         { error: "chatId and message are required" },
