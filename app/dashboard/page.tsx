@@ -25,32 +25,35 @@ export default async function DashboardPage() {
     }
   );
 
+  // Temporarily trust Supabase cookies without redirecting to login
   const {
     data: { session }
   } = await supabase.auth.getSession();
 
-  if (!session) {
-    redirect("/login?redirect=/dashboard");
-  }
-
-  const userId = session.user.id;
+  const userId = session?.user?.id;
 
   const [{ data: profile }, { data: wallets }, { data: transactions }] =
     await Promise.all([
-      supabase
-        .from("profiles")
-        .select("tier, telegram_chat_id, default_threshold")
-        .eq("id", userId)
-        .maybeSingle(),
-      supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("transactions")
-        .select("*")
-        .order("created_at", { ascending: false })
+      userId
+        ? supabase
+            .from("profiles")
+            .select("tier, telegram_chat_id, default_threshold")
+            .eq("id", userId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      userId
+        ? supabase
+            .from("wallets")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] }),
+      userId
+        ? supabase
+            .from("transactions")
+            .select("*")
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] })
     ]);
 
   const tier = (profile?.tier as "free" | "pro") ?? "free";
