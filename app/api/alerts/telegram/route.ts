@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
 
-    const res = await fetch(telegramUrl, {
+    const telegramRes = await fetch(telegramUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -50,16 +50,20 @@ export async function POST(request: Request) {
       })
     });
 
-    if (!res.ok) {
-      const text = await res.text();
+    const telegramJson = await telegramRes.json();
+    console.log(
+      "[telegram route] telegram response:",
+      JSON.stringify(telegramJson)
+    );
+
+    if (!telegramRes.ok) {
       return NextResponse.json(
-        { error: `Telegram API error: ${text}` },
-        { status: res.status }
+        { error: `Telegram API error: ${JSON.stringify(telegramJson)}` },
+        { status: telegramRes.status }
       );
     }
 
-    const data = await res.json();
-    return NextResponse.json({ ok: true, telegram: data });
+    return NextResponse.json({ ok: true, telegram: telegramJson });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
