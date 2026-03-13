@@ -27,6 +27,11 @@ export function SettingsClient({
   const [signingOut, setSigningOut] = useState(false);
 
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [storedTelegramId, setStoredTelegramId] = useState<string | null>(
+    telegramChatId
+  );
 
   // Client-side auth check on mount
   useEffect(() => {
@@ -52,14 +57,15 @@ export function SettingsClient({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSaveSuccess(null);
+    setSaveError(null);
     const trimmedTelegram = telegram.trim();
     const numericThreshold = Number(threshold || "10");
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       setSaving(false);
-      // eslint-disable-next-line no-alert
-      alert("Supabase is not configured.");
+      setSaveError("Supabase is not configured.");
       return;
     }
 
@@ -76,10 +82,17 @@ export function SettingsClient({
     setSaving(false);
 
     if (error) {
-      // eslint-disable-next-line no-alert
-      alert(error.message);
+      setSaveError(error.message);
       return;
     }
+
+    setStoredTelegramId(trimmedTelegram || null);
+    setSaveSuccess("Settings saved!");
+
+    // Clear success message after a short delay
+    window.setTimeout(() => {
+      setSaveSuccess(null);
+    }, 3000);
   };
 
   const handleSignOut = async () => {
@@ -163,6 +176,12 @@ export function SettingsClient({
               Whale alerts will be pushed to this Telegram chat when enabled in your
               browser.
             </p>
+            {storedTelegramId && (
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                Currently stored chat ID:{" "}
+                <span style={{ color: "var(--amber3)" }}>{storedTelegramId}</span>
+              </p>
+            )}
           </label>
         </section>
 
@@ -197,6 +216,17 @@ export function SettingsClient({
             </p>
           </label>
         </section>
+
+        {saveSuccess && (
+          <p className="text-xs" style={{ color: "var(--green)" }}>
+            {saveSuccess}
+          </p>
+        )}
+        {saveError && (
+          <p className="text-xs" style={{ color: "var(--red)" }}>
+            {saveError}
+          </p>
+        )}
 
         <div className="flex items-center justify-between pt-2 text-xs">
           <button
