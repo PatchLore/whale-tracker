@@ -145,10 +145,13 @@ export function DashboardClient({
   }, [transactions, feedFilter]);
 
   // Attach polling engine (Etherscan + Supabase)
+  console.log("[polling] starting with telegramChatId:", telegramChatIdState);
+  console.log("[polling] wallets:", wallets.length);
+
   usePolling({
     tier,
     wallets,
-    telegramChatId,
+    telegramChatId: telegramChatIdState,
     onNewTransactions: (_walletId, newTxs) => {
       setTransactions(prev => {
         const existingIds = new Set(prev.map(t => t.id));
