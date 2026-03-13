@@ -1036,8 +1036,22 @@ function ActivityFeed({
   onFilterChange,
   hasWallets
 }: ActivityFeedProps) {
+  const [showDust, setShowDust] = useState(false);
+
+  const DUST_THRESHOLD = 0.000001;
+
+  const visibleTransactions = useMemo(
+    () =>
+      showDust
+        ? transactions
+        : transactions.filter(tx => (tx.eth_value ?? 0) >= DUST_THRESHOLD),
+    [transactions, showDust]
+  );
+
   const countLabel =
-    totalCount === 1 ? "1 event" : `${totalCount.toString()} events`;
+    visibleTransactions.length === 1
+      ? "1 event"
+      : `${visibleTransactions.length.toString()} events`;
 
   return (
     <section
@@ -1092,6 +1106,19 @@ function ActivityFeed({
             active={filter === "outgoing"}
             onClick={() => onFilterChange("outgoing")}
           />
+          <button
+            type="button"
+            onClick={() => setShowDust(prev => !prev)}
+            className="ml-2 rounded border px-3 py-1 text-[9px] tracking-[0.2em] uppercase transition"
+            style={{
+              borderColor: showDust ? "var(--amber2)" : "var(--border)",
+              backgroundColor: showDust ? "rgba(255,140,0,0.08)" : "transparent",
+              color: showDust ? "var(--amber2)" : "var(--muted)",
+              fontFamily: "var(--font-plex-mono)"
+            }}
+          >
+            {showDust ? "HIDE DUST" : "SHOW DUST"}
+          </button>
           <span
             className="ml-auto text-[10px]"
             style={{ color: "var(--dim)" }}
@@ -1100,7 +1127,7 @@ function ActivityFeed({
           </span>
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto pb-2">
-          {transactions.length === 0 ? (
+          {visibleTransactions.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-[11px]">
               <div className="text-2xl opacity-40">
                 {hasWallets ? (filter === "whale" ? "🐋" : "📡") : "🐋"}
@@ -1114,7 +1141,7 @@ function ActivityFeed({
               </div>
             </div>
           ) : (
-            transactions.slice(0, 50).map(tx => (
+            visibleTransactions.slice(0, 50).map(tx => (
               <TxCard key={tx.id} tx={tx} />
             ))
           )}
@@ -1233,7 +1260,7 @@ function TxCard({ tx }: TxCardProps) {
           color: ethBig ? "var(--amber)" : "var(--amber3)"
         }}
       >
-        {eth.toFixed(4)} ETH{" "}
+        {eth.toFixed(eth < 1 ? 6 : 4)} ETH{" "}
         <span
           className="text-[11px] font-normal"
           style={{ color: "var(--muted)" }}
@@ -1273,7 +1300,12 @@ function timeAgo(date: Date) {
   const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diffSeconds < 60) return `${diffSeconds}s ago`;
   if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
-  return `${Math.floor(diffSeconds / 3600)}h ago`;
+  if (diffSeconds < 48 * 3600) {
+    return `${Math.floor(diffSeconds / 3600)}h ago`;
+  }
+  const days = Math.floor(diffSeconds / (24 * 3600));
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
 }
 
 function truncAddr(addr: string | null) {
