@@ -29,13 +29,16 @@ export function usePolling({
 
     const activeWallets = wallets.filter(w => w.is_active);
 
+    if (activeWallets.length === 0) {
+      return;
+    }
+
     const firePoll = async (wallet: Wallet) => {
       try {
         console.log(
-          "[polling] firing poll, telegramChatId:",
+          "[polling] telegramChatId at fire time:",
           telegramChatId
         );
-
         const payload = {
           walletId: wallet.id,
           address: wallet.address,
@@ -55,11 +58,6 @@ export function usePolling({
         if (!res.ok) return;
 
         const data = (await res.json()) as PollResponse;
-        console.log("[polling] poll response:", {
-          newTxns: data.newTxns,
-          whaleAlerts: data.whaleAlerts?.length,
-          telegramChatId
-        });
 
         if (data.transactions?.length) {
           onNewTransactions(wallet.id, data.transactions);
@@ -67,7 +65,7 @@ export function usePolling({
 
         if (data.whaleAlerts?.length) {
           console.log(
-            "[polling] whale alerts:",
+            "[polling] whale alerts count:",
             data.whaleAlerts?.length
           );
           // Telegram alerts
