@@ -56,6 +56,8 @@ function LoginForm() {
     if (data.session) {
       // eslint-disable-next-line no-console
       console.log("[login] successful login, redirecting", { redirectTo });
+      // Small delay to allow auth cookies to be fully written before navigating.
+      await new Promise(resolve => setTimeout(resolve, 500));
       // Use a full-page navigation so middleware sees the new session cookies.
       if (typeof window !== "undefined") {
         window.location.href = redirectTo;
