@@ -30,7 +30,11 @@ export default async function DashboardPage() {
     data: { session }
   } = await supabase.auth.getSession();
 
-  const userId = session?.user?.id;
+  if (!session?.user?.id) {
+    redirect("/login?redirect=/dashboard");
+  }
+
+  const userId = session.user.id;
 
   const [{ data: profile }, { data: wallets }, { data: transactions }] =
     await Promise.all([
@@ -63,7 +67,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      userId={userId ?? ""}
+      userId={userId}
       tier={tier ?? "free"}
       telegramChatId={telegramChatId ?? ""}
       defaultThreshold={defaultThreshold ?? 0}
