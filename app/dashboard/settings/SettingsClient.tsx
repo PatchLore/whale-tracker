@@ -1,23 +1,23 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Tier } from "@/types/supabase";
 
 type SettingsClientProps = {
-  userId: string;
-  tier: Tier;
-  telegramChatId: string | null;
-  defaultThreshold: number | null;
+  userId?: string;
+  tier?: Tier;
+  telegramChatId?: string | null;
+  defaultThreshold?: number | null;
 };
 
 export function SettingsClient({
   userId,
-  tier,
-  telegramChatId,
-  defaultThreshold
-}: SettingsClientProps) {
+  tier = "free",
+  telegramChatId = null,
+  defaultThreshold = null
+}: SettingsClientProps = {}) {
   const router = useRouter();
   const [telegram, setTelegram] = useState(telegramChatId ?? "");
   const [threshold, setThreshold] = useState(
@@ -25,6 +25,29 @@ export function SettingsClient({
   );
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+
+  const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
+
+  // Client-side auth check on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        router.push("/login?redirect=/dashboard/settings");
+        return;
+      }
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        router.push("/login?redirect=/dashboard/settings");
+        return;
+      }
+      setResolvedUserId(session.user.id);
+    };
+
+    void checkAuth();
+  }, [router]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +71,7 @@ export function SettingsClient({
           ? null
           : numericThreshold
       })
-      .eq("id", userId);
+      .eq("id", resolvedUserId ?? "");
 
     setSaving(false);
 
