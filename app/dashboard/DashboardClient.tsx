@@ -7,12 +7,12 @@ import { usePolling } from "@/lib/hooks/usePolling";
 import type { Tier, WalletChain, Wallet, Transaction } from "@/types/supabase";
 
 type DashboardClientProps = {
-  userId: string;
-  tier: Tier;
-  telegramChatId: string | null;
-  defaultThreshold: number | null;
-  initialWallets: Wallet[];
-  initialTransactions: Transaction[];
+  userId?: string;
+  tier?: Tier;
+  telegramChatId?: string | null;
+  defaultThreshold?: number | null;
+  initialWallets?: Wallet[];
+  initialTransactions?: Transaction[];
 };
 
 const FREE_LIMIT = 3;
@@ -20,12 +20,12 @@ const PRO_LIMIT = 50;
 
 export function DashboardClient({
   userId,
-  tier,
-  telegramChatId,
-  defaultThreshold,
-  initialWallets,
-  initialTransactions
-}: DashboardClientProps) {
+  tier = "free",
+  telegramChatId = null,
+  defaultThreshold = null,
+  initialWallets = [],
+  initialTransactions = []
+}: DashboardClientProps = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
