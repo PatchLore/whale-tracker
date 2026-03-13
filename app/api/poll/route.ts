@@ -21,7 +21,7 @@ type EtherscanTx = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as PollRequestBody;
-    const { walletId, address, threshold } = body;
+    const { walletId, address, threshold, chain } = body;
 
     if (!walletId || !address) {
       return NextResponse.json(
@@ -38,14 +38,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const url = new URL("https://api.etherscan.io/api");
+    // Map app-level chain identifiers to Etherscan v2 chain IDs
+    const normalizedChain = chain.toLowerCase();
+    let chainId: number | null = null;
+    if (normalizedChain === "ethereum" || normalizedChain === "eth") {
+      chainId = 1;
+    } else if (normalizedChain === "bsc" || normalizedChain === "binance-smart-chain") {
+      chainId = 56;
+    } else if (normalizedChain === "polygon" || normalizedChain === "matic") {
+      chainId = 137;
+    }
+
+    if (chainId === null) {
+      return NextResponse.json(
+        { error: `Unsupported chain '${chain}' for Etherscan v2` },
+        { status: 400 }
+      );
+    }
+
+    // Etherscan v2 API format
+    const url = new URL("https://api.etherscan.io/v2/api");
+    url.searchParams.set("chainid", chainId.toString());
     url.searchParams.set("module", "account");
     url.searchParams.set("action", "txlist");
     url.searchParams.set("address", address);
     url.searchParams.set("startblock", "0");
     url.searchParams.set("endblock", "99999999");
-    url.searchParams.set("page", "1");
-    url.searchParams.set("offset", "20");
     url.searchParams.set("sort", "desc");
     url.searchParams.set("apikey", etherscanKey);
 
