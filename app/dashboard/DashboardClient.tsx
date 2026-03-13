@@ -41,6 +41,8 @@ export function DashboardClient({
   const [hasRequestedNotifications, setHasRequestedNotifications] = useState(false);
   const [showUpgradeToast, setShowUpgradeToast] = useState(false);
 
+  const resolvedUserId = userId ?? "";
+
   const walletLimit = tier === "pro" ? PRO_LIMIT : FREE_LIMIT;
 
   useEffect(() => {
@@ -247,7 +249,7 @@ export function DashboardClient({
             onAddWallet={handleAddWallet}
             onRemoveWallet={handleRemoveWallet}
             isLoading={isLoadingWallets}
-            userId={userId}
+            userId={resolvedUserId ?? ""}
             telegramChatId={telegramChatIdState}
             onTelegramChatIdChange={setTelegramChatIdState}
             defaultThreshold={defaultThreshold}
