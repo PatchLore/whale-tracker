@@ -1,12 +1,29 @@
 export const dynamic = "force-dynamic";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
 import { DashboardClient } from "./DashboardClient";
 import type { Wallet, Transaction } from "@/types/supabase";
 
 export default async function DashboardPage() {
-  const supabase = createServerSupabaseClient();
+  const cookieStore = cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        // No-op in server components; mutations are handled via route handlers/middleware.
+        setAll() {
+          return;
+        }
+      }
+    }
+  );
 
   const {
     data: { session }
