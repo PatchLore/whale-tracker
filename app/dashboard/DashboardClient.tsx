@@ -924,18 +924,24 @@ type TelegramSettingsProps = {
 function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
   const [input, setInput] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [hasSavedId, setHasSavedId] = useState(Boolean(value));
+
+  useEffect(() => {
+    setHasSavedId(Boolean(value));
+  }, [value]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[telegram] save clicked", { userId, value: input });
-    // eslint-disable-next-line no-alert
-    alert("save telegram clicked");
     setSaving(true);
+    setStatus("saving");
     const trimmed = input.trim();
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       setSaving(false);
+      setStatus("idle");
       // eslint-disable-next-line no-alert
       alert("Supabase is not configured.");
       return;
@@ -949,10 +955,17 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
     setSaving(false);
 
     if (error) {
+      setStatus("idle");
       // eslint-disable-next-line no-alert
       alert(error.message);
       return;
     }
+
+    setStatus("saved");
+    setHasSavedId(Boolean(trimmed));
+    window.setTimeout(() => {
+      setStatus("idle");
+    }, 2000);
 
     onChange(trimmed || null);
   };
@@ -963,7 +976,13 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
         className="text-[9px] tracking-[0.2em] uppercase"
         style={{ color: "var(--muted)" }}
       >
-        TELEGRAM CHAT ID
+        TELEGRAM CHAT ID{" "}
+        {hasSavedId && (
+          <span
+            className="inline-block h-2 w-2 rounded-full align-middle"
+            style={{ backgroundColor: "var(--green)" }}
+          />
+        )}
       </div>
       <input
         className="w-full rounded border px-3 py-2 outline-none text-[11px]"
@@ -992,7 +1011,11 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
           opacity: saving ? 0.7 : 1
         }}
       >
-        {saving ? "Saving…" : "Save Telegram ID"}
+        {status === "saving"
+          ? "Saving…"
+          : status === "saved"
+          ? "Saved ✓"
+          : "Save Telegram ID"}
       </button>
     </form>
   );
