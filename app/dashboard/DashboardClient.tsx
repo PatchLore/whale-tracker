@@ -563,12 +563,12 @@ function WalletRegistry({
         </div>
 
         <TelegramSettings
-          userId={resolvedUserId ?? ""}
+          userId={userId}
           value={telegramChatId}
           onChange={onTelegramChatIdChange}
         />
 
-        <ProBanner tier={tier} userId={resolvedUserId ?? ""} />
+        <ProBanner tier={tier} userId={userId} />
       </div>
     </section>
   );
