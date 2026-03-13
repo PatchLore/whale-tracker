@@ -56,7 +56,12 @@ function LoginForm() {
     if (data.session) {
       // eslint-disable-next-line no-console
       console.log("[login] successful login, redirecting", { redirectTo });
-      router.push(redirectTo);
+      // Use a full-page navigation so middleware sees the new session cookies.
+      if (typeof window !== "undefined") {
+        window.location.href = redirectTo;
+      } else {
+        router.push(redirectTo);
+      }
     } else {
       setMessage("Check your email to confirm your login.");
     }
