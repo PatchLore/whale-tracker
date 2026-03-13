@@ -720,31 +720,45 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
             CHAIN
           </div>
           <div className="mt-1 flex flex-wrap gap-1">
-            {(["ethereum", "bsc", "solana"] as WalletChain[]).map(option => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setChain(option)}
-                className="rounded border px-3 py-1 text-[9px] tracking-[0.2em] uppercase transition"
-                style={{
-                  borderColor:
-                    chain === option ? "var(--amber2)" : "var(--border)",
-                  backgroundColor:
-                    chain === option
+            {(["ethereum", "bsc", "solana"] as WalletChain[]).map(option => {
+              const isEth = option === "ethereum";
+              const isActive = chain === option;
+              const disabled = !isEth;
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    if (!disabled) {
+                      setChain(option);
+                    }
+                  }}
+                  title={disabled ? "Coming soon" : undefined}
+                  className="rounded border px-3 py-1 text-[9px] tracking-[0.2em] uppercase transition"
+                  style={{
+                    borderColor: isActive ? "var(--amber2)" : "var(--border)",
+                    backgroundColor: isActive
                       ? "rgba(255,140,0,0.08)"
                       : "transparent",
-                  color:
-                    chain === option ? "var(--amber2)" : "var(--muted)",
-                  fontFamily: "var(--font-plex-mono)"
-                }}
-              >
-                {option === "ethereum"
-                  ? "ETH"
-                  : option === "bsc"
-                  ? "BSC"
-                  : "SOL"}
-              </button>
-            ))}
+                    color: disabled
+                      ? "var(--muted)"
+                      : isActive
+                      ? "var(--amber2)"
+                      : "var(--muted)",
+                    fontFamily: "var(--font-plex-mono)",
+                    opacity: disabled ? 0.4 : 1,
+                    cursor: disabled ? "not-allowed" : "pointer"
+                  }}
+                >
+                  {option === "ethereum"
+                    ? "ETH"
+                    : option === "bsc"
+                    ? "BSC"
+                    : "SOL"}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
