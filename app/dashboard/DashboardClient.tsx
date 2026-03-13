@@ -40,6 +40,7 @@ export function DashboardClient({
   );
   const [hasRequestedNotifications, setHasRequestedNotifications] = useState(false);
   const [showUpgradeToast, setShowUpgradeToast] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const resolvedUserId = userId ?? "";
 
@@ -143,6 +144,26 @@ export function DashboardClient({
     chain: WalletChain;
     threshold: number;
   }) => {
+    console.log("[addWallet] resolvedUserId:", resolvedUserId);
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      // eslint-disable-next-line no-alert
+      alert("Supabase is not configured.");
+      return;
+    }
+
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+    console.log("[addWallet] session user id:", session?.user?.id);
+
+    const insertUserId = session?.user?.id;
+    if (!insertUserId) {
+      setError("Not authenticated");
+      return;
+    }
+
     if (wallets.length >= walletLimit) {
       // eslint-disable-next-line no-alert
       alert(
@@ -153,17 +174,10 @@ export function DashboardClient({
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      // eslint-disable-next-line no-alert
-      alert("Supabase is not configured.");
-      return;
-    }
-
     const { data, error } = await supabase
       .from("wallets")
       .insert({
-        user_id: userId,
+        user_id: insertUserId,
         label: payload.label || null,
         address: payload.address,
         chain: payload.chain,
