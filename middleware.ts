@@ -1,23 +1,38 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-export function middleware(req: NextRequest) {
-  const isDashboardRoute = req.nextUrl.pathname.startsWith("/dashboard");
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next();
 
-  // Supabase sets an access token cookie; if it's missing, treat user as unauthenticated.
-  const hasSessionCookie =
-    !!req.cookies.get("sb-access-token") || !!req.cookies.get("sb-refresh-token");
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        }
+      }
+    }
+  );
 
-  if (isDashboardRoute && !hasSessionCookie) {
-    const redirectUrl = new URL("/login", req.url);
-    redirectUrl.searchParams.set(
-      "redirect",
-      req.nextUrl.pathname + req.nextUrl.search
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session && request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(
+      new URL("/login?redirect=/dashboard", request.url)
     );
-    return NextResponse.redirect(redirectUrl);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
