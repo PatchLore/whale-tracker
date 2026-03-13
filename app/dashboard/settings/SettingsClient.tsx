@@ -48,7 +48,31 @@ export function SettingsClient({
         router.push("/login?redirect=/dashboard/settings");
         return;
       }
-      setResolvedUserId(session.user.id);
+      const currentUserId = session.user.id;
+      setResolvedUserId(currentUserId);
+
+      // Load existing profile settings for this user
+      console.log("[settings] loading profile for user:", currentUserId);
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("telegram_chat_id, default_threshold")
+        .eq("id", currentUserId)
+        .single();
+
+      if (error) {
+        console.error("[settings] failed to load profile:", error.message);
+        return;
+      }
+
+      if (profile) {
+        const tgId = (profile as { telegram_chat_id: string | null }).telegram_chat_id;
+        const defaultThresh = (profile as { default_threshold: number | null })
+          .default_threshold;
+
+        setStoredTelegramId(tgId ?? null);
+        setTelegram(tgId ?? "");
+        setThreshold(((defaultThresh ?? 10) as number).toString());
+      }
     };
 
     void checkAuth();
@@ -69,6 +93,17 @@ export function SettingsClient({
       return;
     }
 
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+    console.log("[settings] saving settings for user:", session?.user?.id);
+    const updateUserId = session?.user?.id;
+    if (!updateUserId) {
+      setSaving(false);
+      setSaveError("Not authenticated.");
+      return;
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -77,7 +112,7 @@ export function SettingsClient({
           ? null
           : numericThreshold
       })
-      .eq("id", resolvedUserId ?? "");
+      .eq("id", updateUserId);
 
     setSaving(false);
 
