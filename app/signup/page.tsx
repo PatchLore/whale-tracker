@@ -49,6 +49,14 @@ function SignupForm() {
       return;
     }
 
+    // If email confirmation is disabled, Supabase returns a session directly.
+    if (data.session) {
+      setLoading(false);
+      router.push(redirectTo);
+      return;
+    }
+
+    // Otherwise, fall back to the email confirmation flow.
     setLoading(false);
     setMessage("Check your email to confirm your account.");
   };
