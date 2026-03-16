@@ -421,7 +421,7 @@ function StatsBar({
 
   return (
     <section
-      className="mb-6 grid gap-px overflow-hidden rounded-lg border border-[var(--border)]"
+      className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-px overflow-hidden rounded-lg border border-[var(--border)]"
       style={{ backgroundColor: "var(--border)" }}
     >
       <StatCell
@@ -1031,6 +1031,15 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
         style={{ color: "var(--muted)" }}
       >
         TELEGRAM CHAT ID{" "}
+        <a
+          href="/faq#telegram"
+          target="_blank"
+          rel="noreferrer"
+          className="ml-1 text-[10px] align-middle underline underline-offset-2"
+          style={{ color: "var(--amber2)" }}
+        >
+          ?
+        </a>{" "}
         {hasSavedId && (
           <span
             className="inline-block h-2 w-2 rounded-full align-middle"
