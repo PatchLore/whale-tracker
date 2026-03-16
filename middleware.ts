@@ -1,14 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const accessToken = request.cookies.get("sb-access-token")?.value;
-
-  if (!accessToken) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", "/dashboard");
-    return NextResponse.redirect(loginUrl);
-  }
-
+export function middleware() {
+  // Temporarily allow all requests through; auth protection will be re-enabled later.
   return NextResponse.next();
 }
 
