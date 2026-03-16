@@ -830,10 +830,15 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
         <button
           type="button"
           onClick={onRemove}
-          className="text-[10px]"
-          style={{ color: "var(--dim)" }}
+          className="text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 rounded border"
+          style={{
+            borderColor: "var(--red)",
+            color: "var(--red)",
+            backgroundColor: "transparent",
+            fontFamily: "var(--font-plex-mono)"
+          }}
         >
-          ✕
+          Remove
         </button>
       </div>
       <div
