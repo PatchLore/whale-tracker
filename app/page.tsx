@@ -150,7 +150,7 @@ export default function Home() {
                   className="text-lg font-semibold"
                   style={{ color: "var(--amber)" }}
                 >
-                  $15/mo
+                  £9.99/mo — Limited Offer
                 </span>
               </div>
               <ul className="space-y-1 text-[12px]" style={{ color: "var(--text2)" }}>

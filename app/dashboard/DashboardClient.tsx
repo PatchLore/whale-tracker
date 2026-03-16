@@ -803,6 +803,11 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
     if (Number.isNaN(numeric) || numeric <= 0) {
       return;
     }
+    console.log("[wallets] commitThreshold", {
+      walletId: wallet.id,
+      thresholdInput,
+      numeric
+    });
     onUpdateThreshold(numeric);
   };
 
@@ -856,7 +861,7 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
           >
             Threshold
           </div>
-          <div style={{ color: "var(--amber)" }}>
+          <div className="flex items-center gap-2" style={{ color: "var(--amber)" }}>
             <input
               type="number"
               className="w-20 rounded border px-2 py-0.5 text-[10px]"
@@ -875,8 +880,20 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
                   commitThreshold();
                 }
               }}
-            />{" "}
-            ETH
+            />
+            <span>ETH</span>
+            <button
+              type="button"
+              onClick={commitThreshold}
+              className="rounded border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em]"
+              style={{
+                borderColor: "var(--border2)",
+                color: "var(--amber3)",
+                fontFamily: "var(--font-plex-mono)"
+              }}
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
@@ -947,7 +964,7 @@ function ProBanner({ tier, userId }: ProBannerProps) {
           }
         }}
       >
-        Upgrade · $15/mo
+        Upgrade · £9.99/mo — Limited Offer
       </button>
     </div>
   );
