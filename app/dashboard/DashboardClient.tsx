@@ -42,6 +42,7 @@ export function DashboardClient({
   const [showUpgradeToast, setShowUpgradeToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
+  const [isReady, setIsReady] = useState(false);
 
   const walletLimit = tier === "pro" ? PRO_LIMIT : FREE_LIMIT;
 
@@ -75,9 +76,11 @@ export function DashboardClient({
 
     const load = async () => {
       setIsLoadingWallets(true);
+      setIsReady(false);
       const supabase = getSupabaseBrowserClient();
       if (!supabase) {
         setIsLoadingWallets(false);
+        setIsReady(true);
         return;
       }
       const [
@@ -111,6 +114,7 @@ export function DashboardClient({
         setTelegramChatIdState(profile.telegram_chat_id);
       }
       setIsLoadingWallets(false);
+      setIsReady(true);
     };
 
     void load();
@@ -163,6 +167,7 @@ export function DashboardClient({
   usePolling({
     tier,
     wallets,
+    isReady,
     telegramChatId: telegramChatIdState,
     onNewTransactions: (_walletId, newTxs) => {
       setTransactions(prev => {

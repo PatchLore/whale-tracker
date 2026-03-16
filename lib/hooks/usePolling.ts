@@ -6,6 +6,7 @@ import type { Tier, Wallet, Transaction } from "@/types/supabase";
 type UsePollingOptions = {
   tier: Tier;
   wallets: Wallet[];
+  isReady: boolean;
   telegramChatId: string | null;
   onNewTransactions: (walletId: string, txs: Transaction[]) => void;
 };
@@ -19,12 +20,17 @@ type PollResponse = {
 export function usePolling({
   tier,
   wallets,
+  isReady,
   telegramChatId,
   onNewTransactions
 }: UsePollingOptions) {
   const timersRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+
     const intervalMs = tier === "pro" ? 30_000 : 60_000;
 
     const activeWallets = wallets.filter(w => w.is_active);
@@ -133,7 +139,7 @@ export function usePolling({
       Object.values(timersRef.current).forEach(id => window.clearInterval(id));
       timersRef.current = {};
     };
-  }, [tier, wallets, telegramChatId, onNewTransactions]);
+  }, [tier, wallets, isReady, telegramChatId, onNewTransactions]);
 }
 
 
