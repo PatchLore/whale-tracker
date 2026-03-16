@@ -66,8 +66,8 @@ export function usePolling({
         }
 
         if (data.whaleAlerts?.length) {
-          // Telegram alerts
-          if (telegramChatId) {
+          // Telegram alerts (pro tier only)
+          if (tier === "pro" && telegramChatId) {
             for (const tx of data.whaleAlerts) {
               const direction =
                 tx.direction === "incoming" ? "received" : "sent";

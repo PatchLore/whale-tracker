@@ -926,15 +926,17 @@ function ProBanner({ tier, userId }: ProBannerProps) {
         className="mb-1 text-sm tracking-[0.3em] uppercase"
         style={{ fontFamily: "var(--font-orbitron)", color: "var(--amber)" }}
       >
-        ⬡ WHALENET PRO
+        🐋 Founding Member Price — £9.99/mo
       </div>
       <p
         className="mb-2 text-[10px] leading-relaxed"
         style={{ color: "var(--muted)" }}
       >
-        Track up to 50 wallets · Telegram + Discord alerts
+        50 wallets · 30s polling · Telegram alerts (Pro-only)
         <br />
-        1-minute polling · Multi-chain · CSV export
+        + BSC, Solana, Discord &amp; CSV export shipping this month
+        <br />
+        Price increases when features launch — lock in now
       </p>
       <button
         type="button"
