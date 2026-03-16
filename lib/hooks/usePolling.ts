@@ -41,10 +41,6 @@ export function usePolling({
 
     const firePoll = async (wallet: Wallet) => {
       try {
-        console.log(
-          "[polling] telegramChatId at fire time:",
-          telegramChatId
-        );
         const payload = {
           walletId: wallet.id,
           address: wallet.address,
@@ -70,10 +66,6 @@ export function usePolling({
         }
 
         if (data.whaleAlerts?.length) {
-          console.log(
-            "[polling] whale alerts count:",
-            data.whaleAlerts?.length
-          );
           // Telegram alerts
           if (telegramChatId) {
             for (const tx of data.whaleAlerts) {
@@ -119,8 +111,10 @@ export function usePolling({
             }
           }
         }
-      } catch {
-        // Swallow polling errors; they should not break the dashboard.
+      } catch (err) {
+        // Log polling errors for debugging; UI stays resilient.
+        // eslint-disable-next-line no-console
+        console.error("[polling] error", err);
       }
     };
 

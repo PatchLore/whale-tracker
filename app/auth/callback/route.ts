@@ -13,7 +13,18 @@ export async function GET(request: Request) {
   }
 
   const supabase = createServerSupabaseClient();
-  await supabase.auth.exchangeCodeForSession(code);
+  try {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      const errorUrl = new URL("/login", requestUrl.origin);
+      errorUrl.searchParams.set("error", "auth_failed");
+      return NextResponse.redirect(errorUrl);
+    }
+  } catch {
+    const errorUrl = new URL("/login", requestUrl.origin);
+    errorUrl.searchParams.set("error", "auth_failed");
+    return NextResponse.redirect(errorUrl);
+  }
 
   // After exchanging the code for a session, redirect to the intended destination.
   const redirectUrl = new URL(redirectParam, requestUrl.origin);

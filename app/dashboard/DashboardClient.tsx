@@ -63,8 +63,6 @@ export function DashboardClient({
       }
 
       setResolvedUserId(session.user.id);
-      // Debug log to confirm timing
-      console.log("[dashboard] set resolvedUserId from session:", session.user.id);
     };
 
     void checkAuth();
@@ -160,10 +158,6 @@ export function DashboardClient({
     return transactions.filter(t => t.direction === feedFilter);
   }, [transactions, feedFilter]);
 
-  // Attach polling engine (Etherscan + Supabase)
-  console.log("[polling] starting with telegramChatId:", telegramChatIdState);
-  console.log("[polling] wallets:", wallets.length);
-
   usePolling({
     tier,
     wallets,
@@ -189,8 +183,6 @@ export function DashboardClient({
     chain: WalletChain;
     threshold: number;
   }) => {
-    console.log("[addWallet] resolvedUserId:", resolvedUserId);
-
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       // eslint-disable-next-line no-alert
@@ -201,8 +193,6 @@ export function DashboardClient({
     const {
       data: { session }
     } = await supabase.auth.getSession();
-    console.log("[addWallet] session user id:", session?.user?.id);
-
     const insertUserId = session?.user?.id;
     if (!insertUserId) {
       setError("Not authenticated");
@@ -241,8 +231,6 @@ export function DashboardClient({
   };
 
   const handleRemoveWallet = async (walletId: string) => {
-    console.log("[wallets] remove clicked", walletId);
-
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       // eslint-disable-next-line no-alert
@@ -263,8 +251,6 @@ export function DashboardClient({
 
     setWallets(prev => prev.filter(w => w.id !== walletId));
     setTransactions(prev => prev.filter(t => t.wallet_id !== walletId));
-
-    console.log("[wallets] removed wallet and related transactions", walletId);
   };
 
   const handleUpdateWalletThreshold = async (
@@ -277,13 +263,10 @@ export function DashboardClient({
       alert("Supabase is not configured.");
       return;
     }
-
-    console.log("[updateWallet] updating threshold:", walletId, newThreshold);
     const { error } = await supabase
       .from("wallets")
       .update({ threshold: newThreshold })
       .eq("id", walletId);
-    console.log("[updateWallet] result:", error);
 
     if (error) {
       // eslint-disable-next-line no-alert
@@ -365,6 +348,16 @@ export function DashboardClient({
 }
 
 function Header() {
+  const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -391,6 +384,18 @@ function Header() {
           <span className="h-[7px] w-[7px] rounded-full bg-[var(--green)] animate-pulse" />
           MONITORING ACTIVE
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-2 rounded border px-3 py-1 text-[10px] tracking-[0.2em] uppercase"
+          style={{
+            borderColor: "var(--border2)",
+            color: "var(--muted)",
+            fontFamily: "var(--font-plex-mono)"
+          }}
+        >
+          Logout
+        </button>
       </div>
     </header>
   );
@@ -803,11 +808,6 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
     if (Number.isNaN(numeric) || numeric <= 0) {
       return;
     }
-    console.log("[wallets] commitThreshold", {
-      walletId: wallet.id,
-      thresholdInput,
-      numeric
-    });
     onUpdateThreshold(numeric);
   };
 
@@ -988,7 +988,6 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[telegram] save clicked", { userId, value: input });
     setSaving(true);
     setStatus("saving");
     const trimmed = input.trim();
