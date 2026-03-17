@@ -15,20 +15,13 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: any) {
-          response.cookies.set(name, value, options);
-        },
-        remove(name: string, options: any) {
-          response.cookies.set(name, "", {
-            ...options,
-            maxAge: 0
-          });
-        },
-        // Optional helper used by @supabase/ssr to batch cookie updates.
-        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
+        // @supabase/ssr will call setAll to update auth cookies. We propagate
+        // those onto the NextResponse so the browser receives the refreshed
+        // session on this middleware pass.
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
