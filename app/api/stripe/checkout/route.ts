@@ -37,6 +37,11 @@ export async function POST(req: Request) {
         metadata: {
           supabaseUserId: userId
         },
+        subscription_data: {
+          metadata: {
+            supabaseUserId: userId
+          }
+        },
         success_url: `${appUrl}/dashboard?upgraded=true`,
         cancel_url: `${appUrl}/dashboard`
       });

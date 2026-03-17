@@ -123,6 +123,8 @@ export function DashboardClient({
     const upgraded = searchParams.get("upgraded");
     if (upgraded === "true") {
       setShowUpgradeToast(true);
+      // Refresh the page so any tier-dependent server data is up to date.
+      router.refresh();
       // Strip the query param to avoid repeated toasts on reload
       router.replace("/dashboard");
     }
@@ -158,7 +160,7 @@ export function DashboardClient({
     return transactions.filter(t => t.direction === feedFilter);
   }, [transactions, feedFilter]);
 
-  usePolling({
+  const { isPollingError } = usePolling({
     tier,
     wallets,
     isReady,
@@ -343,6 +345,20 @@ export function DashboardClient({
           />
         </div>
       </div>
+
+      {isPollingError && (
+        <div
+          className="fixed bottom-4 right-4 rounded-md border px-3 py-2 text-[10px]"
+          style={{
+            borderColor: "var(--border2)",
+            backgroundColor: "rgba(255,179,0,0.06)",
+            color: "var(--muted)",
+            fontFamily: "var(--font-plex-mono)"
+          }}
+        >
+          Live updates paused. Check connection.
+        </div>
+      )}
     </div>
   );
 }

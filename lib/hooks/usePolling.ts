@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Tier, Wallet, Transaction } from "@/types/supabase";
 
 type UsePollingOptions = {
@@ -25,6 +25,8 @@ export function usePolling({
   onNewTransactions
 }: UsePollingOptions) {
   const timersRef = useRef<Record<string, number>>({});
+  const [isPollingError, setIsPollingError] = useState(false);
+  const failureCountRef = useRef(0);
 
   useEffect(() => {
     if (!isReady) {
@@ -56,10 +58,21 @@ export function usePolling({
           },
           body: JSON.stringify(payload)
         });
-
-        if (!res.ok) return;
+        if (!res.ok) {
+          failureCountRef.current += 1;
+          if (failureCountRef.current > 3) {
+            setIsPollingError(true);
+          }
+          return;
+        }
 
         const data = (await res.json()) as PollResponse;
+
+        // Successful poll: reset error state and failure counter.
+        failureCountRef.current = 0;
+        if (isPollingError) {
+          setIsPollingError(false);
+        }
 
         if (data.transactions?.length) {
           onNewTransactions(wallet.id, data.transactions);
@@ -115,6 +128,10 @@ export function usePolling({
         // Log polling errors for debugging; UI stays resilient.
         // eslint-disable-next-line no-console
         console.error("[polling] error", err);
+        failureCountRef.current += 1;
+        if (failureCountRef.current > 3) {
+          setIsPollingError(true);
+        }
       }
     };
 
@@ -133,7 +150,8 @@ export function usePolling({
       Object.values(timersRef.current).forEach(id => window.clearInterval(id));
       timersRef.current = {};
     };
-  }, [tier, wallets, isReady, telegramChatId, onNewTransactions]);
-}
+  }, [tier, wallets, isReady, telegramChatId, onNewTransactions, isPollingError]);
 
+  return { isPollingError };
+}
 
