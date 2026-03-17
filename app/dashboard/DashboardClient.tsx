@@ -945,6 +945,7 @@ type TelegramSettingsProps = {
 };
 
 function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
+  const tier: "free" | "pro" = "pro";
   const [input, setInput] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
