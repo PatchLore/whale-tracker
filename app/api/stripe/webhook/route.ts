@@ -89,13 +89,19 @@ export async function POST(request: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         let supabaseUserId: string | undefined;
 
+        // `subscription` may be a string ID or an expanded object; it is not
+        // always present on the Stripe.Invoice TypeScript type, so we access it
+        // via a narrowed alias.
+        const subscriptionField = (invoice as any)
+          .subscription as string | Stripe.Subscription | null | undefined;
+
         // Handle the case where subscription is just an ID (string)
-        if (typeof invoice.subscription === "string") {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+        if (typeof subscriptionField === "string") {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionField);
           supabaseUserId = subscription.metadata?.supabaseUserId;
-        } else if (invoice.subscription) {
+        } else if (subscriptionField) {
           // In case it was already expanded (unlikely in webhooks, but safe)
-          supabaseUserId = (invoice.subscription as Stripe.Subscription).metadata
+          supabaseUserId = (subscriptionField as Stripe.Subscription).metadata
             ?.supabaseUserId;
         }
 
