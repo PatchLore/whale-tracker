@@ -200,11 +200,7 @@ export function DashboardClient({
 
     if (wallets.length >= walletLimit) {
       // eslint-disable-next-line no-alert
-      alert(
-        tier === "pro"
-          ? `Pro tier limit reached (${PRO_LIMIT} wallets).`
-          : `Free tier limit reached (${FREE_LIMIT} wallets). Upgrade to Pro for more slots.`
-      );
+      alert(`Wallet limit reached (${PRO_LIMIT} wallets).`);
       return;
     }
 
