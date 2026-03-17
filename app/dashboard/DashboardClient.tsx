@@ -430,6 +430,7 @@ function Header() {
 }
 
 type StatsBarProps = {
+  tier: Tier;
   walletCount: number;
   txCount: number;
   whaleAlerts: number;
@@ -437,6 +438,7 @@ type StatsBarProps = {
 };
 
 function StatsBar({
+  tier,
   walletCount,
   txCount,
   whaleAlerts,
