@@ -608,6 +608,7 @@ function WalletRegistry({
         </div>
 
         <TelegramSettings
+          tier={tier}
           userId={userId}
           value={telegramChatId}
           onChange={onTelegramChatIdChange}
@@ -994,12 +995,13 @@ function ProBanner({ tier, userId }: ProBannerProps) {
 }
 
 type TelegramSettingsProps = {
+  tier: Tier;
   userId: string;
   value: string | null;
   onChange: (value: string | null) => void;
 };
 
-function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
+function TelegramSettings({ tier, userId, value, onChange }: TelegramSettingsProps) {
   const [input, setInput] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -1047,6 +1049,76 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
     onChange(trimmed || null);
   };
 
+  if (tier !== "pro") {
+    return (
+      <div className="mt-4 space-y-2 text-[10px]">
+        <div
+          className="text-[9px] tracking-[0.2em] uppercase"
+          style={{ color: "var(--muted)" }}
+        >
+          TELEGRAM ALERTS
+        </div>
+        <div
+          className="flex items-center justify-between rounded border px-3 py-2"
+          style={{
+            borderColor: "rgba(255,179,0,0.25)",
+            backgroundColor: "rgba(255,179,0,0.04)"
+          }}
+        >
+          <div className="text-left">
+            <div
+              className="text-xs font-medium"
+              style={{ color: "var(--amber3)", fontFamily: "var(--font-orbitron)" }}
+            >
+              🔒 Telegram alerts are a Pro feature
+            </div>
+            <div
+              className="mt-1 text-[10px]"
+              style={{ color: "var(--dim)" }}
+            >
+              Upgrade to receive instant whale alerts in your Telegram.
+            </div>
+          </div>
+          <button
+            type="button"
+            className="ml-3 rounded-md px-3 py-1 text-[10px] tracking-[0.2em] uppercase"
+            style={{
+              backgroundImage:
+                "linear-gradient(135deg, var(--amber), var(--amber2))",
+              color: "var(--bg)",
+              fontFamily: "var(--font-orbitron)"
+            }}
+            onClick={async () => {
+              try {
+                const res = await fetch("/api/stripe/checkout", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ userId })
+                });
+                if (!res.ok) {
+                  // eslint-disable-next-line no-alert
+                  alert("Unable to start checkout. Please try again.");
+                  return;
+                }
+                const data = (await res.json()) as { url?: string };
+                if (data.url) {
+                  window.location.href = data.url;
+                }
+              } catch {
+                // eslint-disable-next-line no-alert
+                alert("Stripe checkout failed. Please try again.");
+              }
+            }}
+          >
+            Upgrade to unlock
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSave} className="mt-4 space-y-1 text-[10px]">
       <div
@@ -1063,7 +1135,7 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
         >
           ?
         </a>{" "}
-        {hasSavedId && (
+        {tier === "pro" && hasSavedId && (
           <span
             className="inline-block h-2 w-2 rounded-full align-middle"
             style={{ backgroundColor: "var(--green)" }}
