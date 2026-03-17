@@ -36,7 +36,6 @@ export function DashboardClient({
     telegramChatId
   );
   const [hasRequestedNotifications, setHasRequestedNotifications] = useState(false);
-  const [showUpgradeToast, setShowUpgradeToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
   const [isReady, setIsReady] = useState(false);
@@ -115,17 +114,16 @@ export function DashboardClient({
     void load();
   }, [resolvedUserId]);
 
-  // Show upgrade toast once when coming back from Stripe
-  useEffect(() => {
-    const upgraded = searchParams.get("upgraded");
-    if (upgraded === "true") {
-      setShowUpgradeToast(true);
-      // Refresh the page so any tier-dependent server data is up to date.
-      router.refresh();
-      // Strip the query param to avoid repeated toasts on reload
-      router.replace("/dashboard");
-    }
-  }, [router, searchParams]);
+  // Legacy: previously used to show a Stripe upgrade toast via ?upgraded=true.
+  // Whop now handles upgrades externally, so this effect is intentionally disabled.
+  // useEffect(() => {
+  //   const upgraded = searchParams.get("upgraded");
+  //   if (upgraded === "true") {
+  //     setShowUpgradeToast(true);
+  //     router.refresh();
+  //     router.replace("/dashboard");
+  //   }
+  // }, [router, searchParams]);
 
   // Browser notification permission on dashboard load
   useEffect(() => {
@@ -278,29 +276,6 @@ export function DashboardClient({
 
   return (
     <div className="relative z-10 mx-auto max-w-5xl px-5 pt-7 pb-20">
-      {showUpgradeToast && (
-        <div className="mb-4 rounded-lg border px-4 py-3 text-sm shadow-lg" style={{ borderColor: "var(--amber)", backgroundColor: "rgba(255,179,0,0.12)" }}>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs tracking-[0.25em] uppercase" style={{ color: "var(--amber2)", fontFamily: "var(--font-orbitron)" }}>
-                Welcome to WhaleNet Pro
-              </div>
-              <div className="mt-1 text-[11px]" style={{ color: "var(--text2)" }}>
-                Your account has been upgraded. Pro limits and faster polling are now active.
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowUpgradeToast(false)}
-              className="text-xs"
-              style={{ color: "var(--dim)" }}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       <Header />
 
       <div
@@ -312,13 +287,8 @@ export function DashboardClient({
           fontFamily: "var(--font-plex-mono)"
         }}
       >
-        <span className="mr-2 text-sm">🐋</span>
-        <span className="tracking-[0.25em] uppercase">
-          Founding Member Deal
-        </span>
-        <div className="mt-1 text-[11px]" style={{ color: "var(--text2)" }}>
-          First 10 subscribers get BSC, Solana, Discord &amp; CSV export free when they
-          launch this month · Lock in £9.99/mo now
+        <div className="text-[11px]" style={{ color: "var(--text2)" }}>
+          🐋 Founding Member Deal — First 10 subscribers get BSC, Solana, Discord &amp; CSV export free when they launch · You&apos;re locked in at £9.99/mo
         </div>
       </div>
 

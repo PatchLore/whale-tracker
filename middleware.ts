@@ -37,17 +37,33 @@ export async function middleware(request: NextRequest) {
   // eslint-disable-next-line no-console
   console.log("[Middleware] User status:", user ? "Logged In" : "Logged Out");
 
+  const pathname = request.nextUrl.pathname;
+
   // If not logged in and trying to access dashboard routes, redirect to login.
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  if (!user && pathname.startsWith("/dashboard")) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // If logged in but not Pro, gate dashboard behind subscription.
+  if (user && pathname.startsWith("/dashboard")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tier")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.tier !== "pro") {
+      const subscribeUrl = new URL("/subscribe", request.url);
+      return NextResponse.redirect(subscribeUrl);
+    }
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"]
+  matcher: ["/dashboard/:path*", "/activating"]
 };
 

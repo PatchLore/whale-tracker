@@ -325,7 +325,7 @@ body::after {
     <div class="stat-cell">
       <div class="stat-lbl">WALLETS TRACKED</div>
       <div class="stat-val" id="statWallets">0</div>
-      <div class="stat-sub">of 3 free slots</div>
+      <div class="stat-sub">of 50 slots</div>
     </div>
     <div class="stat-cell">
       <div class="stat-lbl">TRANSACTIONS SEEN</div>
@@ -345,7 +345,7 @@ body::after {
     <div class="stat-cell">
       <div class="stat-lbl">POLL INTERVAL</div>
       <div class="stat-val" id="statInterval">30s</div>
-      <div class="stat-sub">60s on free tier</div>
+      <div class="stat-sub">30s live polling</div>
     </div>
   </div>
 
@@ -357,7 +357,7 @@ body::after {
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">⬡ WALLET REGISTRY</div>
-          <div style="font-size:9px;color:var(--muted)" id="slotCount">3 SLOTS FREE</div>
+          <div style="font-size:9px;color:var(--muted)" id="slotCount">50 SLOTS TOTAL</div>
         </div>
         <div class="panel-body">
 
@@ -391,7 +391,7 @@ body::after {
           <!-- Wallet List -->
           <div id="walletList" class="wallet-list">
             <div style="font-size:10px;color:var(--dim);text-align:center;padding:20px">
-              No wallets added yet. Add up to 3 on the free tier.
+              No wallets added yet. Add up to 50 wallets.
             </div>
           </div>
 
@@ -446,9 +446,9 @@ body::after {
 
           <div id="activityFeed" class="activity-feed">
             <div class="feed-empty">
-              <div class="feed-empty-icon">🐋</div>
-              <div>Add a wallet to start tracking movements</div>
-              <div style="font-size:10px;margin-top:4px;color:var(--dim)">Polls every 30 seconds · Alerts on threshold breach</div>
+            <div class="feed-empty-icon">🐋</div>
+            <div>Add a wallet to start tracking movements</div>
+            <div style="font-size:10px;margin-top:4px;color:var(--dim)">Polls every 30 seconds · Alerts on threshold breach</div>
             </div>
           </div>
 
@@ -474,7 +474,7 @@ body::after {
 // ═══════════════════════════════
 // STATE
 // ═══════════════════════════════
-const FREE_LIMIT = 3;
+const FREE_LIMIT = 50;
 let wallets = [];
 let selectedChain = 'ethereum';
 let feedFilter = 'all';
@@ -549,7 +549,7 @@ function addWallet(preLabel, preAddr, preThreshold, preChain) {
   const chain = preChain || selectedChain;
 
   if (!addr) { alert('Please enter a wallet address'); return; }
-  if (wallets.length >= FREE_LIMIT) { showToast('FREE LIMIT REACHED', 'Upgrade to WhaleNet Pro to track up to 50 wallets.'); return; }
+  if (wallets.length >= FREE_LIMIT) { showToast('LIMIT REACHED', 'You can currently track up to 50 wallets.'); return; }
   if (wallets.find(w => w.addr.toLowerCase() === addr.toLowerCase())) { alert('Wallet already added'); return; }
 
   const w = { id: Date.now(), label: label || truncAddr(addr), addr, threshold, chain, txCount: 0, lastTx: null };
@@ -576,8 +576,8 @@ function removeWallet(id) {
 function renderWallets() {
   const list = $('walletList');
   if (wallets.length === 0) {
-    list.innerHTML = '<div style="font-size:10px;color:var(--dim);text-align:center;padding:20px">No wallets added yet. Add up to 3 on the free tier.</div>';
-    $('slotCount').textContent = `3 SLOTS FREE`;
+    list.innerHTML = '<div style="font-size:10px;color:var(--dim);text-align:center;padding:20px">No wallets added yet. Add up to 50 wallets.</div>';
+    $('slotCount').textContent = `50 SLOTS TOTAL`;
     $('lockedSlots').innerHTML = '';
     return;
   }
@@ -606,7 +606,7 @@ function renderWallets() {
     </div>
   `).join('');
 
-  $('slotCount').textContent = `${FREE_LIMIT - wallets.length} SLOT${FREE_LIMIT - wallets.length !== 1 ? 'S' : ''} FREE`;
+  $('slotCount').textContent = `${FREE_LIMIT - wallets.length} SLOT${FREE_LIMIT - wallets.length !== 1 ? 'S' : ''} REMAINING`;
 
   // Locked pro slots preview
   const locked = $('lockedSlots');
@@ -617,8 +617,8 @@ function renderWallets() {
         <div class="wc-addr">0x████████████████████████████████████</div>
         <div class="wc-stats"><div><div class="wc-stat-lbl">CHAIN</div><div class="wc-stat-val">ETH</div></div></div>
       </div>
-      <div class="lock-overlay" onclick="showToast('UPGRADE REQUIRED','Track up to 50 wallets with WhaleNet Pro · £9.99/month — Limited Offer')">
-        🔒 PRO ONLY — UPGRADE TO UNLOCK
+      <div class="lock-overlay">
+        🔒 RESERVED SLOT
       </div>
     </div>
   `;

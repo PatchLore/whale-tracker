@@ -74,6 +74,9 @@ function SignupForm() {
           <p className="mt-3 text-xs text-neutral-400 uppercase tracking-[0.25em]">
             Create Access
           </p>
+          <p className="mt-2 text-[11px] text-neutral-500">
+            Already purchased on Whop? Create your account below to get started.
+          </p>
         </header>
 
         <form onSubmit={handleSignup} className="space-y-4 text-sm">
