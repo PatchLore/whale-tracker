@@ -430,7 +430,7 @@ function Header() {
 }
 
 type StatsBarProps = {
-  tier: Tier;
+  tier: "free" | "pro";
   walletCount: number;
   txCount: number;
   whaleAlerts: number;
@@ -518,6 +518,7 @@ function StatCell({ label, value, sub, valueColor }: StatCellProps) {
 }
 
 type WalletRegistryProps = {
+  tier: "free" | "pro";
   walletLimit: number;
   walletCount: number;
   wallets: Wallet[];
@@ -537,6 +538,7 @@ type WalletRegistryProps = {
 };
 
 function WalletRegistry({
+  tier,
   walletLimit,
   walletCount,
   wallets,
