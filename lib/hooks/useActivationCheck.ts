@@ -11,7 +11,7 @@ export function useActivationCheck(isNewLogin: boolean): ActivationState {
   const [timeout, setTimeoutReached] = useState(false);
 
   useEffect(() => {
-    if (!isNewLogin) return;
+    if (!isNewLogin || activated) return;
 
     let cancelled = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -66,7 +66,7 @@ export function useActivationCheck(isNewLogin: boolean): ActivationState {
       if (intervalId) clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isNewLogin]);
+  }, [isNewLogin, activated]);
 
   return { activated, timeout };
 }

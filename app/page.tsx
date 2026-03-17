@@ -1,25 +1,16 @@
- "use client";
-
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { ActivationRedirect } from "./ActivationRedirect";
 
 export default function Home() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const activated = searchParams.get("activated");
-    if (activated === "true") {
-      router.replace("/activating");
-    }
-  }, [router, searchParams]);
-
   return (
     <main
       className="min-h-screen"
       style={{ backgroundColor: "#060501" }}
     >
       <div className="relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col px-5 pt-16 pb-20">
+        <Suspense fallback={null}>
+          <ActivationRedirect />
+        </Suspense>
         <header className="mb-10">
           <h1
             className="mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
