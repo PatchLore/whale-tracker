@@ -8,19 +8,16 @@ import type { Tier, WalletChain, Wallet, Transaction } from "@/types/supabase";
 
 type DashboardClientProps = {
   userId?: string;
-  tier?: Tier;
   telegramChatId?: string | null;
   defaultThreshold?: number | null;
   initialWallets?: Wallet[];
   initialTransactions?: Transaction[];
 };
 
-const FREE_LIMIT = 3;
 const PRO_LIMIT = 50;
 
 export function DashboardClient({
   userId,
-  tier = "free",
   telegramChatId = null,
   defaultThreshold = null,
   initialWallets = [],
@@ -43,8 +40,8 @@ export function DashboardClient({
   const [error, setError] = useState<string | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
   const [isReady, setIsReady] = useState(false);
-
-  const walletLimit = tier === "pro" ? PRO_LIMIT : FREE_LIMIT;
+  const tier: Tier = "pro";
+  const walletLimit = PRO_LIMIT;
 
   // Client-side auth: ensure we have a user ID and update resolvedUserId
   useEffect(() => {
@@ -161,7 +158,7 @@ export function DashboardClient({
   }, [transactions, feedFilter]);
 
   const { isPollingError } = usePolling({
-    tier,
+    tier, // always pro
     wallets,
     isReady,
     telegramChatId: telegramChatIdState,
@@ -310,6 +307,25 @@ export function DashboardClient({
 
       <Header />
 
+      <div
+        className="mb-4 rounded-lg border px-4 py-3 text-[10px]"
+        style={{
+          borderColor: "rgba(255,179,0,0.25)",
+          backgroundColor: "rgba(255,179,0,0.05)",
+          color: "var(--amber2)",
+          fontFamily: "var(--font-plex-mono)"
+        }}
+      >
+        <span className="mr-2 text-sm">🐋</span>
+        <span className="tracking-[0.25em] uppercase">
+          Founding Member Deal
+        </span>
+        <div className="mt-1 text-[11px]" style={{ color: "var(--text2)" }}>
+          First 10 subscribers get BSC, Solana, Discord &amp; CSV export free when they
+          launch this month · Lock in £9.99/mo now
+        </div>
+      </div>
+
       <StatsBar
         tier={tier}
         walletCount={wallets.length}
@@ -418,7 +434,6 @@ function Header() {
 }
 
 type StatsBarProps = {
-  tier: Tier;
   walletCount: number;
   txCount: number;
   whaleAlerts: number;
@@ -426,14 +441,13 @@ type StatsBarProps = {
 };
 
 function StatsBar({
-  tier,
   walletCount,
   txCount,
   whaleAlerts,
   largestMove
 }: StatsBarProps) {
-  const walletLimit = tier === "pro" ? PRO_LIMIT : FREE_LIMIT;
-  const pollInterval = tier === "pro" ? "30s" : "60s";
+  const walletLimit = PRO_LIMIT;
+  const pollInterval = "30s";
 
   return (
     <section
@@ -443,7 +457,7 @@ function StatsBar({
       <StatCell
         label="WALLETS TRACKED"
         value={walletCount.toString()}
-        sub={`of ${walletLimit} ${tier === "pro" ? "pro slots" : "free slots"}`}
+        sub={`of ${walletLimit}`}
       />
       <StatCell
         label="TRANSACTIONS SEEN"
@@ -464,7 +478,7 @@ function StatsBar({
       <StatCell
         label="POLL INTERVAL"
         value={pollInterval}
-        sub={tier === "pro" ? "30s on pro tier" : "60s on free tier"}
+        sub="30s live polling"
       />
     </section>
   );
@@ -506,7 +520,6 @@ function StatCell({ label, value, sub, valueColor }: StatCellProps) {
 }
 
 type WalletRegistryProps = {
-  tier: Tier;
   walletLimit: number;
   walletCount: number;
   wallets: Wallet[];
@@ -526,7 +539,6 @@ type WalletRegistryProps = {
 };
 
 function WalletRegistry({
-  tier,
   walletLimit,
   walletCount,
   wallets,
@@ -589,9 +601,7 @@ function WalletRegistry({
               style={{ color: "var(--dim)" }}
             >
               No wallets added yet.{" "}
-              {tier === "pro"
-                ? "Add up to 50 wallets on Pro."
-                : "Add up to 3 wallets on the free tier."}
+              Add up to 50 wallets.
             </p>
           ) : (
             wallets.map(w => (
@@ -608,13 +618,10 @@ function WalletRegistry({
         </div>
 
         <TelegramSettings
-          tier={tier}
           userId={userId}
           value={telegramChatId}
           onChange={onTelegramChatIdChange}
         />
-
-        <ProBanner tier={tier} userId={userId} />
       </div>
     </section>
   );
@@ -924,84 +931,20 @@ function WalletCard({ wallet, onUpdateThreshold, onRemove }: WalletCardProps) {
 }
 
 type ProBannerProps = {
-  tier: Tier;
   userId: string;
 };
 
-function ProBanner({ tier, userId }: ProBannerProps) {
-  if (tier === "pro") return null;
-
-  return (
-    <div
-      className="mt-3 rounded-lg px-4 py-3 text-center"
-      style={{
-        backgroundColor: "rgba(255,179,0,0.06)",
-        border: "1px solid rgba(255,179,0,0.25)"
-      }}
-    >
-      <div
-        className="mb-1 text-sm tracking-[0.3em] uppercase"
-        style={{ fontFamily: "var(--font-orbitron)", color: "var(--amber)" }}
-      >
-        🐋 Founding Member Price — £9.99/mo
-      </div>
-      <p
-        className="mb-2 text-[10px] leading-relaxed"
-        style={{ color: "var(--muted)" }}
-      >
-        50 wallets · 30s polling · Telegram alerts (Pro-only)
-        <br />
-        + BSC, Solana, Discord &amp; CSV export shipping this month
-        <br />
-        Price increases when features launch — lock in now
-      </p>
-      <button
-        type="button"
-        className="rounded-md px-4 py-2 text-[11px] tracking-[0.2em] uppercase"
-        style={{
-          backgroundImage:
-            "linear-gradient(135deg, var(--amber), var(--amber2))",
-          color: "var(--bg)",
-          fontFamily: "var(--font-orbitron)"
-        }}
-        onClick={async () => {
-          try {
-            const res = await fetch("/api/stripe/checkout", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({ userId })
-            });
-            if (!res.ok) {
-              // eslint-disable-next-line no-alert
-              alert("Unable to start checkout. Please try again.");
-              return;
-            }
-            const data = (await res.json()) as { url?: string };
-            if (data.url) {
-              window.location.href = data.url;
-            }
-          } catch {
-            // eslint-disable-next-line no-alert
-            alert("Stripe checkout failed. Please try again.");
-          }
-        }}
-      >
-        Upgrade · £9.99/mo — Limited Offer
-      </button>
-    </div>
-  );
+function ProBanner({ userId }: ProBannerProps) {
+  return null;
 }
 
 type TelegramSettingsProps = {
-  tier: Tier;
   userId: string;
   value: string | null;
   onChange: (value: string | null) => void;
 };
 
-function TelegramSettings({ tier, userId, value, onChange }: TelegramSettingsProps) {
+function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
   const [input, setInput] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -1048,76 +991,6 @@ function TelegramSettings({ tier, userId, value, onChange }: TelegramSettingsPro
 
     onChange(trimmed || null);
   };
-
-  if (tier !== "pro") {
-    return (
-      <div className="mt-4 space-y-2 text-[10px]">
-        <div
-          className="text-[9px] tracking-[0.2em] uppercase"
-          style={{ color: "var(--muted)" }}
-        >
-          TELEGRAM ALERTS
-        </div>
-        <div
-          className="flex items-center justify-between rounded border px-3 py-2"
-          style={{
-            borderColor: "rgba(255,179,0,0.25)",
-            backgroundColor: "rgba(255,179,0,0.04)"
-          }}
-        >
-          <div className="text-left">
-            <div
-              className="text-xs font-medium"
-              style={{ color: "var(--amber3)", fontFamily: "var(--font-orbitron)" }}
-            >
-              🔒 Telegram alerts are a Pro feature
-            </div>
-            <div
-              className="mt-1 text-[10px]"
-              style={{ color: "var(--dim)" }}
-            >
-              Upgrade to receive instant whale alerts in your Telegram.
-            </div>
-          </div>
-          <button
-            type="button"
-            className="ml-3 rounded-md px-3 py-1 text-[10px] tracking-[0.2em] uppercase"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, var(--amber), var(--amber2))",
-              color: "var(--bg)",
-              fontFamily: "var(--font-orbitron)"
-            }}
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/stripe/checkout", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({ userId })
-                });
-                if (!res.ok) {
-                  // eslint-disable-next-line no-alert
-                  alert("Unable to start checkout. Please try again.");
-                  return;
-                }
-                const data = (await res.json()) as { url?: string };
-                if (data.url) {
-                  window.location.href = data.url;
-                }
-              } catch {
-                // eslint-disable-next-line no-alert
-                alert("Stripe checkout failed. Please try again.");
-              }
-            }}
-          >
-            Upgrade to unlock
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSave} className="mt-4 space-y-1 text-[10px]">
