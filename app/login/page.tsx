@@ -25,38 +25,47 @@ function LoginForm() {
     setError(null);
     setMessage(null);
 
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setLoading(false);
-      setError("Supabase is not configured.");
-      // eslint-disable-next-line no-console
-      console.error("[login] Supabase client is null. Check env vars.");
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    setLoading(false);
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    if (data.session) {
-      // Small delay to allow auth cookies to be fully written before navigating.
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // Use a full-page navigation so middleware sees the new session cookies.
-      if (typeof window !== "undefined") {
-        window.location.href = redirectTo;
-      } else {
-        router.push(redirectTo);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setLoading(false);
+        setError("Supabase is not configured.");
+        // eslint-disable-next-line no-console
+        console.error("[login] Supabase client is null. Check env vars.");
+        return;
       }
-    } else {
-      setMessage("Check your email to confirm your login.");
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      setLoading(false);
+
+      if (error) {
+        setError(error.message);
+        // eslint-disable-next-line no-console
+        console.log("[login] signInWithPassword error object:", error);
+        return;
+      }
+
+      if (data.session) {
+        // Small delay to allow auth cookies to be fully written before navigating.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Use a full-page navigation so middleware sees the new session cookies.
+        if (typeof window !== "undefined") {
+          window.location.href = redirectTo;
+        } else {
+          router.push(redirectTo);
+        }
+      } else {
+        setMessage("Check your email to confirm your login.");
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("Unexpected error during login. Please try again.");
+      // eslint-disable-next-line no-console
+      console.log("[login] unexpected error during signInWithPassword:", err);
     }
   };
 
