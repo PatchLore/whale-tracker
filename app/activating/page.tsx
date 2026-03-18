@@ -64,7 +64,7 @@ export default function ActivatingPage() {
                   Try Dashboard
                 </a>
                 <a
-                  href="https://whop.com/whalenet/"
+                  href="https://whop.com/whalenet-2e/"
                   target="_blank"
                   rel="noreferrer"
                   className="w-full rounded-md border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]"

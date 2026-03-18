@@ -8,13 +8,13 @@ const faqs = [
       <p className="text-sm text-[var(--text2)]">
         Purchase your subscription at{" "}
         <a
-          href="https://whop.com/whalenet/"
+          href="https://whop.com/whalenet-2e/"
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2"
           style={{ color: "var(--amber2)" }}
         >
-          whop.com/whalenet
+          whop.com/whalenet-2e
         </a>{" "}
         — once payment is confirmed you&apos;ll be redirected to create your account
         and get started instantly. Your Pro access is activated automatically.

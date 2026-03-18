@@ -27,7 +27,7 @@ export default function SubscribePage() {
         </div>
 
         <a
-          href="https://whop.com/whalenet/"
+          href="https://whop.com/whalenet-2e/"
           target="_blank"
           rel="noreferrer"
           className="mt-8 block w-full rounded-md border px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.25em] transition"
