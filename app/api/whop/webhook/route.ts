@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-type WhopEventType = "membership.went_valid" | "membership.went_invalid";
+type WhopEventType = "membership_activated" | "membership_deactivated";
 
 type WhopWebhookPayload = {
   type: WhopEventType;
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   const supabase = createServerSupabaseClient();
 
   const eventType = payload.type;
-  if (eventType === "membership.went_valid") {
+  if (eventType === "membership_activated") {
     const { error } = await supabase
       .from("profiles")
       .update({ tier: "pro" })
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-  } else if (eventType === "membership.went_invalid") {
+  } else if (eventType === "membership_deactivated") {
     const { error } = await supabase
       .from("profiles")
       .update({ tier: "free" })
