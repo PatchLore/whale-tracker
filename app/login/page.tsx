@@ -50,25 +50,13 @@ function LoginForm() {
       }
 
       if (data.session) {
-        // After login, check the user's tier to decide where they should land.
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("tier")
-          .eq("id", data.session.user.id)
-          .single();
-
-        const target =
-          profile?.tier === "pro"
-            ? redirectTo
-            : "/subscribe";
-
         // Small delay to allow auth cookies to be fully written before navigating.
         await new Promise(resolve => setTimeout(resolve, 500));
         // Use a full-page navigation so middleware sees the new session cookies.
         if (typeof window !== "undefined") {
-          window.location.href = target;
+          window.location.href = redirectTo;
         } else {
-          router.push(target);
+          router.push(redirectTo);
         }
       } else {
         setMessage("Check your email to confirm your login.");
