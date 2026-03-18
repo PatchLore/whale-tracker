@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WhaleNet iframe test</title>
+</head>
+<body style="margin:0;padding:20px;background:#111;color:white;font-family:sans-serif">
+  <h3>iframe load test</h3>
+  <p>Testing all routes:</p>
+  
+  <h4>/ (homepage)</h4>
+  <iframe src="https://whale-tracker-tau.vercel.app" 
+    width="100%" height="300px" style="border:1px solid #444"
+    onload="this.nextSibling.textContent='✅ Loaded'" 
+    onerror="this.nextSibling.textContent='❌ Failed'">
+  </iframe>
+  <span style="color:lime"> checking...</span>
+
+  <h4>/login</h4>
+  <iframe src="https://whale-tracker-tau.vercel.app/login" 
+    width="100%" height="300px" style="border:1px solid #444"
+    onload="this.nextSibling.textContent='✅ Loaded'" 
+    onerror="this.nextSibling.textContent='❌ Failed'">
+  </iframe>
+  <span style="color:lime"> checking...</span>
+
+  <h4>/signup</h4>
+  <iframe src="https://whale-tracker-tau.vercel.app/signup" 
+    width="100%" height="300px" style="border:1px solid #444"
+    onload="this.nextSibling.textContent='✅ Loaded'" 
+    onerror="this.nextSibling.textContent='❌ Failed'">
+  </iframe>
+  <span style="color:lime"> checking...</span>
+
+  <h4>/subscribe</h4>
+  <iframe src="https://whale-tracker-tau.vercel.app/subscribe" 
+    width="100%" height="300px" style="border:1px solid #444"
+    onload="this.nextSibling.textContent='✅ Loaded'" 
+    onerror="this.nextSibling.textContent='❌ Failed'">
+  </iframe>
+  <span style="color:lime"> checking...</span>
+
+</body>
+</html>
+
