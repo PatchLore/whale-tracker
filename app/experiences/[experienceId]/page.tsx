@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
-import { WhopAPI } from "@whop-apps/sdk";
-import { whopsdk } from "@/lib/whop-sdk";
+import { validateToken, WhopAPI } from "@whop-apps/sdk";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DashboardClient } from "@/app/dashboard/DashboardClient";
 
@@ -13,12 +12,26 @@ type ExperiencePageProps = {
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { experienceId } = params;
 
-  // Validate Whop user token and access using the documented pattern
-  const { userId } = await whopsdk.verifyUserToken(await headers());
+  // Validate Whop user token using documented validateToken helper
+  const { userId } = await validateToken({ headers: await headers() });
 
-  const access = await whopsdk.users.checkAccess(experienceId, { id: userId });
+  // Check access via Whop API (keep loose typing to avoid SDK version drift issues)
+  const accessRes = await WhopAPI.app({
+    apiKey: process.env.WHOP_API_KEY!
+  }).GET("/apps/experiences/{experience_id}/access/{user_id}" as any, {
+    params: {
+      path: {
+        experience_id: experienceId,
+        user_id: userId
+      }
+    }
+  } as any);
 
-  if (!access.has_access) {
+  const hasAccess =
+    (accessRes as any)?.data?.has_access === true ||
+    (accessRes as any)?.data?.has_access === "true";
+
+  if (!hasAccess) {
     return <div>Access denied</div>;
   }
 
