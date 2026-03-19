@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { validateToken, WhopAPI } from "@whop-apps/sdk";
+import { WhopAPI } from "@whop-apps/sdk";
+import { whopsdk } from "@/lib/whop-sdk";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { DashboardClient } from "@/app/dashboard/DashboardClient";
 
 type ExperiencePageProps = {
   params: {
@@ -10,22 +11,23 @@ type ExperiencePageProps = {
 };
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
-  const headersList = headers();
+  const { experienceId } = params;
 
-  try {
-    // Validate the Whop user token from cookies/headers
-    await validateToken({ headers: headersList });
-  } catch {
-    // If the token is invalid or missing, just send them to the homepage.
-    redirect("/");
+  // Validate Whop user token and access using the documented pattern
+  const { userId } = await whopsdk.verifyUserToken(await headers());
+
+  const access = await whopsdk.users.checkAccess(experienceId, { id: userId });
+
+  if (!access.has_access) {
+    return <div>Access denied</div>;
   }
 
   // Fetch the current Whop user (including email) using the SDK
-  const meResponse = await WhopAPI.me({ headers: headersList }).GET("/me", {});
+  const meResponse = await WhopAPI.me({ headers }).GET("/me", {});
   const email = meResponse.data?.email;
 
   if (!email) {
-    redirect("/");
+    return <div>Access denied</div>;
   }
 
   const supabase = createServerSupabaseClient();
@@ -50,7 +52,8 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   }
 
   // At this point, the user is validated via Whop and has a pro profile.
-  // Send them straight into the dashboard experience.
-  redirect("/dashboard");
+  // Render the dashboard directly inside the Whop experience.
+  return <DashboardClient />;
 }
+
 
