@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
-import { validateToken, WhopAPI } from "@whop-apps/sdk";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { DashboardClient } from "@/app/dashboard/DashboardClient";
+import { whopsdk } from "@/lib/whop-sdk";
 
 type ExperiencePageProps = {
   params: {
@@ -14,30 +14,21 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // Validate Whop user token using documented validateToken helper
   let userId: string = "guest";
+  const requestHeaders = await headers();
   try {
-    ({ userId } = await validateToken({ headers: await headers() }));
+    ({ userId } = await whopsdk.verifyUserToken(requestHeaders));
   } catch {
     // Non-Whop context (or token missing) — render dashboard anyway for testing.
     return <DashboardClient userId="guest" />;
   }
 
   // Check access via Whop API (keep loose typing to avoid SDK version drift issues)
-  const accessRes = await WhopAPI.app({
-    apiKey: process.env.WHOP_API_KEY!
-  }).GET("/apps/experiences/{experience_id}/access/{user_id}" as any, {
-    params: {
-      path: {
-        experience_id: experienceId,
-        user_id: userId
-      }
-    }
-  } as any);
-
-  const accessData = (accessRes as any)?.data ?? {};
+  const accessRes = await whopsdk.users.checkAccess(experienceId, {
+    id: userId
+  });
   const access = {
-    has_access:
-      accessData?.has_access === true || accessData?.has_access === "true",
-    access_level: accessData?.access_level
+    has_access: accessRes.has_access,
+    access_level: accessRes.access_level
   };
 
   if (!access.has_access && access.access_level !== "admin") {
@@ -45,8 +36,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   }
 
   // Fetch the current Whop user (including email) using the SDK
-  const meResponse = await WhopAPI.me({ headers }).GET("/me", {});
-  const email = meResponse.data?.email;
+  const meResponse = (await whopsdk.get("/me", {
+    headers: requestHeaders
+  })) as any;
+  const email = meResponse?.email ?? meResponse?.data?.email;
 
   if (!email) {
     return <div>Access denied</div>;

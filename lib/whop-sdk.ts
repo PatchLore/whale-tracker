@@ -1,9 +1,6 @@
-import { validateToken } from "@whop-apps/sdk";
-import { headers } from "next/headers";
+import Whop from "@whop/sdk";
 
-export async function verifyUserToken() {
-  const result = await validateToken({
-    headers: await headers()
-  });
-  return result; // returns { userId, appId }
-}
+export const whopsdk = new Whop({
+  apiKey: process.env.WHOP_API_KEY,
+  appID: process.env.NEXT_PUBLIC_WHOP_APP_ID
+});

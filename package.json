@@ -14,7 +14,7 @@
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/postcss": "^4.2.1",
-    "@whop-apps/sdk": "^0.0.1-canary.117",
+    "@whop/sdk": "^0.0.35",
     "axios": "^1.13.6",
     "next": "^14.2.35",
     "react": "^18.3.1",
