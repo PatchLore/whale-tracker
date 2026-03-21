@@ -63,6 +63,8 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// Only /dashboard is protected. /experiences/* must never hit this middleware —
+// Whop embeds load the app without a Supabase session; tier/login redirects would break the iframe.
 export const config = {
   matcher: ["/dashboard/:path*"]
 };

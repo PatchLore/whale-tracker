@@ -8,6 +8,8 @@ import type { Tier, WalletChain, Wallet, Transaction } from "@/types/supabase";
 
 type DashboardClientProps = {
   userId?: string;
+  /** When true (e.g. Whop iframe), never redirect to /login or /subscribe — user may have no Supabase session. */
+  suppressAuthRedirect?: boolean;
   telegramChatId?: string | null;
   defaultThreshold?: number | null;
   initialWallets?: Wallet[];
@@ -18,6 +20,7 @@ const PRO_LIMIT = 50;
 
 export function DashboardClient({
   userId,
+  suppressAuthRedirect = false,
   telegramChatId = null,
   defaultThreshold = null,
   initialWallets = [],
@@ -46,14 +49,31 @@ export function DashboardClient({
   useEffect(() => {
     const checkAuth = async () => {
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) return;
+      if (!supabase) {
+        if (suppressAuthRedirect) {
+          setIsReady(true);
+        }
+        return;
+      }
+
+      if (suppressAuthRedirect) {
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          setResolvedUserId(session.user.id);
+        } else if (userId) {
+          setResolvedUserId(userId);
+        }
+        setIsReady(true);
+        return;
+      }
 
       const {
         data: { session }
       } = await supabase.auth.getSession();
 
       if (!session?.user?.id) {
-        // If not authenticated, send back to login
         router.push("/login?redirect=/dashboard");
         return;
       }
@@ -62,7 +82,7 @@ export function DashboardClient({
     };
 
     void checkAuth();
-  }, [router]);
+  }, [router, suppressAuthRedirect, userId]);
 
   // Load wallets/transactions whenever resolvedUserId is available
   useEffect(() => {
@@ -276,7 +296,7 @@ export function DashboardClient({
 
   return (
     <div className="relative z-10 mx-auto max-w-5xl px-5 pt-7 pb-20">
-      <Header />
+      <Header suppressAuthRedirect={suppressAuthRedirect} />
 
       <div
         className="mb-4 rounded-lg border px-4 py-3 text-[10px]"
@@ -345,14 +365,18 @@ export function DashboardClient({
   );
 }
 
-function Header() {
+function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boolean }) {
   const handleLogout = async () => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
       await supabase.auth.signOut();
     }
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      if (suppressAuthRedirect) {
+        window.location.reload();
+      } else {
+        window.location.href = "/login";
+      }
     }
   };
 
@@ -382,18 +406,20 @@ function Header() {
           <span className="h-[7px] w-[7px] rounded-full bg-[var(--green)] animate-pulse" />
           MONITORING ACTIVE
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-2 rounded border px-3 py-1 text-[10px] tracking-[0.2em] uppercase"
-          style={{
-            borderColor: "var(--border2)",
-            color: "var(--muted)",
-            fontFamily: "var(--font-plex-mono)"
-          }}
-        >
-          Logout
-        </button>
+        {!suppressAuthRedirect && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-2 rounded border px-3 py-1 text-[10px] tracking-[0.2em] uppercase"
+            style={{
+              borderColor: "var(--border2)",
+              color: "var(--muted)",
+              fontFamily: "var(--font-plex-mono)"
+            }}
+          >
+            Logout
+          </button>
+        )}
       </div>
     </header>
   );
