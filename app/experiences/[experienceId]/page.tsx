@@ -24,7 +24,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   try {
     const { userId } = await whopsdk.verifyUserToken(requestHeaders);
 
-    const accessRes = await whopsdk.users.checkAccess(experienceId, {
+    const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
+    if (!companyId) {
+      throw new Error("Missing NEXT_PUBLIC_WHOP_COMPANY_ID environment variable");
+    }
+
+    const accessRes = await whopsdk.users.checkAccess(companyId, {
       id: userId
     });
 
