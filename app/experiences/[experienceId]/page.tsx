@@ -10,86 +10,59 @@ type ExperiencePageProps = {
 };
 
 function AccessDenied() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-sm"
-      style={{ color: "var(--muted)", fontFamily: "var(--font-plex-mono)" }}
-    >
-      Access denied
-    </div>
-  );
+  return <div>Access denied</div>;
 }
 
 function UnableToVerifySession() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-sm"
-      style={{ color: "var(--muted)", fontFamily: "var(--font-plex-mono)" }}
-    >
-      Unable to verify Whop session
-    </div>
-  );
+  return <div>Unable to verify Whop session</div>;
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
-  const { experienceId } = params;
-  const requestHeaders = await headers();
-
-  let userId: string;
   try {
-    ({ userId } = await whopsdk.verifyUserToken(requestHeaders));
-  } catch {
-    return <UnableToVerifySession />;
-  }
+    const { experienceId } = params;
+    const requestHeaders = await headers();
 
-  let accessRes: { has_access: boolean; access_level: string };
-  try {
-    accessRes = await whopsdk.users.checkAccess(experienceId, {
+    const { userId } = await whopsdk.verifyUserToken(requestHeaders);
+
+    const accessRes = await whopsdk.users.checkAccess(experienceId, {
       id: userId
     });
-  } catch {
-    return <UnableToVerifySession />;
-  }
 
-  const hasAccess = accessRes.has_access;
-  const accessLevel = accessRes.access_level;
-  if (!hasAccess && accessLevel !== "admin") {
-    return <AccessDenied />;
-  }
+    if (!accessRes.has_access) {
+      return <AccessDenied />;
+    }
 
-  let email: string | undefined;
-  try {
     const meResponse = (await whopsdk.get("/me", {
       headers: requestHeaders
     })) as Record<string, unknown> & { data?: { email?: string } };
-    email =
+    const email =
       (typeof meResponse?.email === "string" ? meResponse.email : undefined) ??
       meResponse?.data?.email;
+
+    if (!email) {
+      throw new Error("No email");
+    }
+
+    const { data: existingProfile } = await supabaseServiceClient
+      .from("profiles")
+      .select("id, tier")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingProfile?.id && existingProfile.tier !== "pro") {
+      await supabaseServiceClient
+        .from("profiles")
+        .update({ tier: "pro" })
+        .eq("id", existingProfile.id);
+    }
+
+    return (
+      <DashboardClient
+        suppressAuthRedirect
+        userId={existingProfile?.id}
+      />
+    );
   } catch {
     return <UnableToVerifySession />;
   }
-
-  if (!email) {
-    return <UnableToVerifySession />;
-  }
-
-  const { data: existingProfile } = await supabaseServiceClient
-    .from("profiles")
-    .select("id, tier")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (existingProfile?.id && existingProfile.tier !== "pro") {
-    await supabaseServiceClient
-      .from("profiles")
-      .update({ tier: "pro" })
-      .eq("id", existingProfile.id);
-  }
-
-  return (
-    <DashboardClient
-      suppressAuthRedirect
-      userId={existingProfile?.id}
-    />
-  );
 }
