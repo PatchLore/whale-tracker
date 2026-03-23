@@ -1,4 +1,15 @@
-export default function SubscribePage() {
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function SubscribePage() {
+  const requestHeaders = await headers();
+  const whopUserToken = requestHeaders.get("x-whop-user-token");
+
+  // If request is from Whop iframe, redirect to experience instead of showing subscribe page
+  if (whopUserToken) {
+    redirect("/experiences/whalenet-2e");
+  }
+
   return (
     <main
       className="min-h-screen flex items-center justify-center px-4"

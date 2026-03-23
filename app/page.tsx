@@ -1,7 +1,17 @@
 import { Suspense } from "react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { ActivationRedirect } from "./ActivationRedirect";
 
-export default function Home() {
+export default async function Home() {
+  const requestHeaders = await headers();
+  const whopUserToken = requestHeaders.get("x-whop-user-token");
+
+  // If request is from Whop iframe, redirect to experience instead of showing landing page
+  if (whopUserToken) {
+    redirect("/experiences/whalenet-2e");
+  }
+
   return (
     <main
       className="min-h-screen"
