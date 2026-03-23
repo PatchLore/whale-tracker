@@ -7,4 +7,4 @@ if (!apiKey) {
   throw new Error("Missing WHOP_API_KEY environment variable");
 }
 
-export const whopsdk = new Whop({ apiKey, appId });
+export const whopsdk = new Whop({ apiKey, appID: appId });
