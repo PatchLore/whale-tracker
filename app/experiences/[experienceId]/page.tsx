@@ -18,10 +18,10 @@ function UnableToVerifySession() {
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
-  try {
-    const { experienceId } = params;
-    const requestHeaders = await headers();
+  const { experienceId } = params;
+  const requestHeaders = await headers();
 
+  try {
     const { userId } = await whopsdk.verifyUserToken(requestHeaders);
 
     const accessRes = await whopsdk.users.checkAccess(experienceId, {
@@ -62,7 +62,19 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         userId={existingProfile?.id}
       />
     );
-  } catch {
-    return <UnableToVerifySession />;
+  } catch (error) {
+    console.error("[experiences] Error:", error);
+    console.error("[experiences] Headers:", {
+      token: requestHeaders.get("x-whop-user-token")?.slice(0, 20) + "...",
+      hasToken: !!requestHeaders.get("x-whop-user-token"),
+    });
+    
+    return (
+      <div style={{ padding: 20, color: 'white' }}>
+        <h2>Unable to verify Whop session</h2>
+        <p>Error: {error instanceof Error ? error.message : String(error)}</p>
+        <p>Has token: {requestHeaders.get("x-whop-user-token") ? "Yes" : "No"}</p>
+      </div>
+    );
   }
 }
