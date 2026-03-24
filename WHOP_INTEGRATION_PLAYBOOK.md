@@ -187,19 +187,67 @@ export async function GET(req: NextRequest) {
 ```typescript
 import { headers } from "next/headers";
 import { supabaseServiceClient } from "@/lib/supabase/service";
+import { DashboardClient } from "@/app/dashboard/DashboardClient";
+import { whopsdk } from "@/lib/whop-sdk";
 
-export default async function ExperiencePage({ params }: { params: { experienceId: string } }) {
+type ExperiencePageProps = {
+  params: {
+    experienceId: string;
+  };
+};
+
+// Clean fallback UI components
+function AccessDenied() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          You don't have access to this experience.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WhopOnlyFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          This app must be opened inside Whop.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AuthErrorFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          Unable to verify your session. Please try refreshing the page.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { experienceId } = params;
   const requestHeaders = await headers();
 
-  try {
-    // Get Whop token from request headers
-    const token = requestHeaders.get("x-whop-user-token");
-    
-    if (!token) {
-      throw new Error("No Whop token found. User may not be authenticated.");
-    }
+  // CRITICAL: Check for token FIRST - show clean UI instead of raw errors
+  const token = requestHeaders.get("x-whop-user-token");
+  if (!token) {
+    console.log("[experiences] No Whop token found - showing fallback UI");
+    return <WhopOnlyFallback />;
+  }
 
+  try {
     console.log("[experiences] Verifying user...");
 
     // Call your backend route
@@ -219,12 +267,26 @@ export default async function ExperiencePage({ params }: { params: { experienceI
 
     const userData = await userResponse.json();
     const email = userData?.email;
-    
+
     if (!email) {
       throw new Error("No email in user data");
     }
 
     console.log("[experiences] User verified:", email);
+
+    // Check company access
+    const companyId = process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
+    if (!companyId) {
+      throw new Error("Missing NEXT_PUBLIC_WHOP_COMPANY_ID");
+    }
+
+    const accessRes = await whopsdk.users.checkAccess(companyId, {
+      id: userData.id
+    });
+
+    if (!accessRes.has_access) {
+      return <AccessDenied />;
+    }
 
     // Store in Supabase
     const { data: existingProfile } = await supabaseServiceClient
@@ -250,30 +312,106 @@ export default async function ExperiencePage({ params }: { params: { experienceI
         .eq("id", existingProfile.id);
     }
 
-    return <YourComponent userId={existingProfile?.id} />;
-    
-  } catch (error) {
-    console.error("[experiences] Error:", error);
     return (
-      <div style={{ padding: 20, color: "white" }}>
-        <h2>Authentication Failed</h2>
-        <p>{error instanceof Error ? error.message : "Unknown error"}</p>
-      </div>
+      <DashboardClient
+        suppressAuthRedirect
+        userId={existingProfile?.id}
+      />
     );
+
+  } catch (error) {
+    console.error("[experiences] Auth error:", error);
+    return <AuthErrorFallback />;
   }
 }
 ```
 
-**Key points:**
-- ✅ Gets token from `requestHeaders.get("x-whop-user-token")`
-- ✅ Calls `/api/whop/user` with token
-- ✅ Handles missing token gracefully
-- ✅ Stores user in DB for future reference
-- ✅ Error boundary for authentication failures
+**Key improvements:**
+- ✅ **Early token check** - No raw errors for missing tokens
+- ✅ **Clean fallback UI** - Professional appearance instead of error dumps
+- ✅ **Three distinct states** - Different UI for different scenarios
+- ✅ **Consistent branding** - WhaleNet logo and styling
+- ✅ **Preserved auth logic** - All existing functionality intact
+- ✅ **Better error handling** - Clean UI for API failures too
+
+**UX States:**
+- **No token** → "This app must be opened inside Whop"
+- **Valid session** → Dashboard loads normally
+- **API failure** → "Unable to verify your session. Please try refreshing"
+- **No access** → "You don't have access to this experience"
 
 ---
 
-## 7. Common Errors (CRITICAL SECTION)
+## 7. UX Best Practices (CRITICAL FOR WHOP REVIEW)
+
+### Never Show Raw Errors to Users
+
+**❌ BAD:** Raw error messages visible to users
+```typescript
+return (
+  <div>
+    <h2>Unable to verify Whop session</h2>
+    <p>Error: Missing x-whop-user-token</p>
+  </div>
+);
+```
+
+**✅ GOOD:** Clean, branded fallback UI
+```typescript
+function WhopOnlyFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">YourApp 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          This app must be opened inside Whop.
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+### Handle Missing Tokens Gracefully
+
+**Key Pattern:** Check token **outside** try-catch block
+
+```typescript
+export default async function ExperiencePage({ params }) {
+  const requestHeaders = await headers();
+  
+  // Check token FIRST - return clean UI immediately
+  const token = requestHeaders.get("x-whop-user-token");
+  if (!token) {
+    return <WhopOnlyFallback />;
+  }
+
+  try {
+    // Auth logic here...
+  } catch (error) {
+    return <AuthErrorFallback />;
+  }
+}
+```
+
+### Three Essential UI States
+
+1. **No Token (Direct Access)** → Clean instruction to use Whop
+2. **Auth Success** → Normal app functionality
+3. **Auth Failure** → Clean error with retry suggestion
+
+### Whop Review Requirements
+
+- ✅ **No raw error dumps** visible to users
+- ✅ **Professional appearance** on all screens
+- ✅ **Clear user guidance** for proper usage
+- ✅ **Consistent branding** across all states
+
+**Pro Tip:** Test your app by visiting the experience URL directly in a browser. You should see the clean fallback, not error messages.
+
+---
+
+## 8. Common Errors (CRITICAL SECTION)
 
 ### Error: `404 /api/v1/me`
 
@@ -372,7 +510,7 @@ if (!user?.id || !user?.email) {
 
 ---
 
-## 8. Debug Checklist (FAST)
+## 9. Debug Checklist (FAST)
 
 When auth stops working, go through this in order:
 
@@ -428,7 +566,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ---
 
-## 9. Production Setup
+## 10. Production Setup
 
 ### API Key Security
 
@@ -500,7 +638,7 @@ const getCachedUser = async (token) => {
 
 ---
 
-## 10. Optional (Advanced)
+## 11. Optional (Advanced)
 
 ### Webhooks - Real-Time Membership Updates
 
@@ -613,7 +751,7 @@ export default async function FeaturePage() {
 | Backend verification | `/app/api/whop/user/route.ts` | `fetch("https://api.whop.com/v5/me")` |
 | Frontend auth | `/app/experiences/[id]/page.tsx` | `requestHeaders.get("x-whop-user-token")` |
 | Webhooks | `/app/api/whop/webhook/route.ts` | Verify signature, update DB |
-| Env setup | `.env.local` | `NEXT_PUBLIC_WHOP_COMPANY_ID`, `WHOP_API_KEY` |
+| UX fallbacks | Fallback components | `WhopOnlyFallback()`, `AuthErrorFallback()` |
 
 ---
 
@@ -624,9 +762,10 @@ export default async function FeaturePage() {
 3. **Check env vars** → Must match names exactly (case-sensitive)
 4. **Clear cache** → Delete .next folder, restart server
 5. **Check Whop status** → status.whop.com for outages
-6. **Logs** → Check browser console + server logs
+6. **UX test** → Visit experience URL directly - should show clean fallback
 
 ---
 
 **Last Updated:** March 24, 2026
 **Tested on:** Next.js 14+, Whop API v5
+**Includes:** UX improvements for missing tokens
