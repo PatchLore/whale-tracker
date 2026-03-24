@@ -1,38 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WhopServerSdk } from "@whop/api";
-
-const apiKey = process.env.WHOP_API_KEY;
-const appId = process.env.NEXT_PUBLIC_WHOP_APP_ID;
-if (!apiKey || !appId) {
-  throw new Error(`Missing WHOP_API_KEY (${apiKey ? "set" : "missing"}) or NEXT_PUBLIC_WHOP_APP_ID (${appId ? "set" : "missing"})`);
-}
-
-const whop = WhopServerSdk({
-  appApiKey: apiKey,
-  appId,
-});
 
 export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
     if (!token) {
+      console.warn("[api/whop/user] No authorization token provided");
       return NextResponse.json({ error: "No token" }, { status: 401 });
     }
 
-    const user = await whop.users.getCurrentUser({}, {
+    console.log("[api/whop/user] Fetching user from Whop API v5...");
+    
+    const res = await fetch("https://api.whop.com/v5/me", {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       cache: "no-store",
     });
 
-    if (!user) {
-      return NextResponse.json({ error: "No user data" }, { status: 404 });
+    console.log("[api/whop/user] Whop API response status:", res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("[api/whop/user] Whop API error:", res.status, errorText);
+      return NextResponse.json(
+        { error: `Whop API error: ${res.status}`, details: errorText },
+        { status: res.status }
+      );
     }
+
+    const user = await res.json();
+    console.log("[api/whop/user] Successfully fetched user:", user.id);
 
     return NextResponse.json(user);
   } catch (err) {
     console.error("[api/whop/user] error", err);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch user", details: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }
