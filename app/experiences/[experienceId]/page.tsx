@@ -10,31 +10,62 @@ type ExperiencePageProps = {
 };
 
 function AccessDenied() {
-  return <div>Access denied</div>;
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          You don't have access to this experience.
+        </p>
+      </div>
+    </div>
+  );
 }
 
-function UnableToVerifySession() {
-  return <div>Unable to verify Whop session</div>;
+function WhopOnlyFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          This app must be opened inside Whop.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AuthErrorFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">WhaleNet 🐋</h1>
+        <p className="mt-3 text-gray-400">
+          Unable to verify your session. Please try refreshing the page.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { experienceId } = params;
   const requestHeaders = await headers();
 
+  // Check for Whop token first - if missing, show clean fallback
+  const token = requestHeaders.get("x-whop-user-token");
+  if (!token) {
+    console.log("[experiences] No Whop token found - showing fallback UI");
+    return <WhopOnlyFallback />;
+  }
+
   try {
-    // Get token from headers
-    const token = requestHeaders.get("x-whop-user-token");
-    
     console.log("[experiences] Verifying token with:", {
       appID: process.env.NEXT_PUBLIC_WHOP_APP_ID,
       hasApiKey: !!process.env.WHOP_API_KEY,
       experienceId,
       hasToken: !!token,
     });
-
-    if (!token) {
-      throw new Error("Missing x-whop-user-token");
-    }
 
     // Call backend route to verify user with Whop API v5
     console.log("[experiences] Calling backend /api/whop/user route...");
@@ -55,7 +86,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
     const userData = await userResponse.json();
     const userId = userData.id;
     const email = userData?.email;
-    
+
     console.log("[experiences] User verified successfully:", { userId, hasEmail: !!email });
 
     if (!email) {
@@ -97,18 +128,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       />
     );
   } catch (error) {
-    console.error("[experiences] Error:", error);
-    const token = requestHeaders.get("x-whop-user-token");
+    console.error("[experiences] Auth error:", error);
     console.error("[experiences] Debug info:", {
       token: token ? token.slice(0, 50) + "..." : null,
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    
-    return (
-      <div style={{ padding: 20, color: 'white' }}>
-        <h2>Unable to verify Whop session</h2>
-        <p>Error: {error instanceof Error ? error.message : String(error)}</p>
-      </div>
-    );
+
+    return <AuthErrorFallback />;
   }
 }
