@@ -54,13 +54,9 @@ export async function POST(request: Request) {
         const supabaseUserId = session.metadata?.supabaseUserId;
 
         if (supabaseUserId) {
-          const supabase = createServerSupabaseClient();
-          await supabase
-            .from("profiles")
-            .update({ tier: "pro" })
-            .eq("id", supabaseUserId);
+          // Stripe integration deprecated - Whop now handles subscriptions
           // eslint-disable-next-line no-console
-          console.log("[stripe/webhook] upgraded user to pro", {
+          console.log("[stripe/webhook] Stripe checkout completed (Whop now handles subscriptions)", {
             eventType: event.type,
             supabaseUserId
           });
@@ -72,13 +68,9 @@ export async function POST(request: Request) {
         const supabaseUserId = subscription.metadata?.supabaseUserId;
 
         if (supabaseUserId) {
-          const supabase = createServerSupabaseClient();
-          await supabase
-            .from("profiles")
-            .update({ tier: "free" })
-            .eq("id", supabaseUserId);
+          // Stripe integration deprecated - Whop now handles subscriptions
           // eslint-disable-next-line no-console
-          console.log("[stripe/webhook] downgraded user to free (subscription deleted)", {
+          console.log("[stripe/webhook] Stripe subscription deleted (Whop now handles subscriptions)", {
             eventType: event.type,
             supabaseUserId
           });
@@ -106,13 +98,9 @@ export async function POST(request: Request) {
         }
 
         if (supabaseUserId) {
-          const supabase = createServerSupabaseClient();
-          await supabase
-            .from("profiles")
-            .update({ tier: "free" })
-            .eq("id", supabaseUserId);
+          // Stripe integration deprecated - Whop now handles subscriptions
           // eslint-disable-next-line no-console
-          console.log("[stripe/webhook] downgraded user to free (payment failed)", {
+          console.log("[stripe/webhook] Stripe payment failed (Whop now handles subscriptions)", {
             supabaseUserId
           });
         }

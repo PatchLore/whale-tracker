@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { supabaseServiceClient } from "@/lib/supabase/service";
 import { DashboardClient } from "@/app/dashboard/DashboardClient";
 import { whopsdk } from "@/lib/whop-sdk";
@@ -51,6 +52,7 @@ function AuthErrorFallback() {
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { experienceId } = params;
   const requestHeaders = await headers();
+  const cookieStore = await cookies();
 
   // Check for Whop token first - if missing, show clean fallback
   const token = requestHeaders.get("x-whop-user-token");
@@ -84,10 +86,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
     }
 
     const userData = await userResponse.json();
-    const userId = userData.id;
+    const whopUserId = userData.id;
     const email = userData?.email;
 
-    console.log("[experiences] User verified successfully:", { userId, hasEmail: !!email });
+    console.log("[experiences] User verified successfully:", { whopUserId, hasEmail: !!email });
 
     if (!email) {
       throw new Error("No email returned from Whop API");
@@ -100,31 +102,61 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
     // Check access to the company
     const accessRes = await whopsdk.users.checkAccess(companyId, {
-      id: userId
+      id: whopUserId
     });
 
     if (!accessRes.has_access) {
-      console.warn("[experiences] User does not have access to company", { userId, companyId });
+      console.warn("[experiences] User does not have access to company", { whopUserId, companyId });
       return <AccessDenied />;
     }
 
+    // Store Whop user ID in cookie for future dashboard access
+    // This allows users to access /dashboard directly later
+    cookieStore.set("whop_user_id", whopUserId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
+    });
+
     const { data: existingProfile } = await supabaseServiceClient
       .from("profiles")
-      .select("id, tier")
+      .select("id, tier, whop_user_id")
       .eq("email", email)
       .maybeSingle();
 
-    if (existingProfile?.id && existingProfile.tier !== "pro") {
+    if (existingProfile?.id) {
+      // Update existing profile with Whop user ID only
+      if (existingProfile.whop_user_id !== whopUserId) {
+        await supabaseServiceClient
+          .from("profiles")
+          .update({ 
+            whop_user_id: whopUserId
+          })
+          .eq("id", existingProfile.id);
+      }
+    } else {
+      // Create new profile with Whop user ID
       await supabaseServiceClient
         .from("profiles")
-        .update({ tier: "pro" })
-        .eq("id", existingProfile.id);
+        .insert({
+          email,
+          whop_user_id: whopUserId,
+        });
     }
+
+    // Get the updated profile to pass the ID to DashboardClient
+    const { data: updatedProfile } = await supabaseServiceClient
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .single();
 
     return (
       <DashboardClient
         suppressAuthRedirect
-        userId={existingProfile?.id}
+        userId={updatedProfile?.id}
       />
     );
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { clearWhopAccessCache } from "@/lib/whop/access";
 
 type WhopEventType = "membership_activated" | "membership_deactivated";
 
@@ -9,6 +10,7 @@ type WhopWebhookPayload = {
   type: WhopEventType;
   data?: {
     user?: {
+      id?: string;
       email?: string;
     };
     customer?: {
@@ -25,6 +27,10 @@ function getEmailFromPayload(payload: WhopWebhookPayload): string | null {
     payload.data?.email ??
     null
   );
+}
+
+function getWhopUserIdFromPayload(payload: WhopWebhookPayload): string | null {
+  return payload.data?.user?.id ?? null;
 }
 
 function verifySignature(rawBody: string, signature: string | null, secret: string): boolean {
@@ -64,33 +70,36 @@ export async function POST(req: NextRequest) {
   }
 
   const email = getEmailFromPayload(payload);
+  const whopUserId = getWhopUserIdFromPayload(payload);
+  
   if (!email) {
     return NextResponse.json({ error: "Email not found in payload" }, { status: 400 });
+  }
+
+  if (!whopUserId) {
+    return NextResponse.json({ error: "Whop user ID not found in payload" }, { status: 400 });
   }
 
   const supabase = createServerSupabaseClient();
 
   const eventType = payload.type;
-  if (eventType === "membership_activated") {
+  if (eventType === "membership_activated" || eventType === "membership_deactivated") {
+    // Update Whop user ID mapping only
+    // Tier is no longer stored in Supabase - Whop controls access directly
     const { error } = await supabase
       .from("profiles")
-      .update({ tier: "pro" })
+      .update({ 
+        whop_user_id: whopUserId
+      })
       .eq("email", email);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-  } else if (eventType === "membership_deactivated") {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ tier: "free" })
-      .eq("email", email);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    
+    // Clear cache for this user
+    clearWhopAccessCache(whopUserId);
   }
 
   return NextResponse.json({ received: true }, { status: 200 });
 }
-

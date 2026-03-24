@@ -3,18 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { Tier } from "@/types/supabase";
 
 type SettingsClientProps = {
   userId?: string;
-  tier?: Tier;
   telegramChatId?: string | null;
   defaultThreshold?: number | null;
 };
 
 export function SettingsClient({
   userId,
-  tier = "free",
   telegramChatId = null,
   defaultThreshold = null
 }: SettingsClientProps = {}) {
@@ -139,9 +136,7 @@ export function SettingsClient({
     router.push("/login");
   };
 
-  const tierLabel = tier === "pro" ? "Pro" : "Free";
-  const tierColor =
-    tier === "pro" ? "var(--amber)" : "var(--muted)";
+
 
   return (
     <main className="relative z-10 mx-auto max-w-3xl px-5 pt-8 pb-16">
@@ -160,17 +155,7 @@ export function SettingsClient({
             Configure alerts and account preferences for WhaleNet.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="rounded-full px-3 py-1 text-[10px] tracking-[0.2em] uppercase border"
-            style={{
-              borderColor: "rgba(255,179,0,0.4)",
-              color: tierColor
-            }}
-          >
-            {tierLabel} Tier
-          </span>
-        </div>
+
       </header>
 
       <form

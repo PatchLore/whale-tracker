@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { checkWhopAccess, getWhopUserIdForAccessCheck } from "@/lib/whop/access";
 
 export async function middleware(request: NextRequest) {
-  // Create a response object we can pass into the Supabase client so it can
-  // set / refresh auth cookies as needed when getUser() is called.
+  // Create a response object we can pass into the Supabase client
   const response = NextResponse.next({
     request: {
       headers: request.headers
@@ -18,9 +18,6 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        // @supabase/ssr will call setAll to update auth cookies. We propagate
-        // those onto the NextResponse so the browser receives the refreshed
-        // session on this middleware pass.
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
@@ -34,7 +31,6 @@ export async function middleware(request: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser();
 
-  // eslint-disable-next-line no-console
   console.log("[Middleware] User status:", user ? "Logged In" : "Logged Out");
 
   const pathname = request.nextUrl.pathname;
@@ -46,18 +42,36 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If logged in but not Pro, gate dashboard behind subscription.
+  // If logged in, check Whop access for dashboard routes
   if (user && pathname.startsWith("/dashboard")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tier")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.tier !== "pro") {
+    // Get Whop user ID for this Supabase user
+    const whopUserId = await getWhopUserIdForAccessCheck(
+      user.id,
+      request.headers,
+      {
+        get: (name: string) => request.cookies.get(name)
+      }
+    );
+    
+    if (!whopUserId) {
+      // No Whop user ID found - user cannot have access
+      console.log(`[Middleware] No Whop user ID found for Supabase user ${user.id}, redirecting to subscribe`);
       const subscribeUrl = new URL("/subscribe", request.url);
       return NextResponse.redirect(subscribeUrl);
     }
+    
+    // Check Whop access using the Whop user ID
+    // This meets the requirement: const hasAccess = await checkWhopAccess(user.id)
+    // (where user.id is effectively mapped to whopUserId)
+    const hasAccess = await checkWhopAccess(whopUserId);
+    
+    if (!hasAccess) {
+      console.log(`[Middleware] Supabase user ${user.id} (Whop: ${whopUserId}) has no active subscription, redirecting to subscribe`);
+      const subscribeUrl = new URL("/subscribe", request.url);
+      return NextResponse.redirect(subscribeUrl);
+    }
+
+    console.log(`[Middleware] Supabase user ${user.id} (Whop: ${whopUserId}) has active subscription, allowing access`);
   }
 
   return response;
@@ -68,4 +82,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/dashboard/:path*"]
 };
-

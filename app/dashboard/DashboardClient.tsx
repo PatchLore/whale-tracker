@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usePolling } from "@/lib/hooks/usePolling";
-import type { Tier, WalletChain, Wallet, Transaction } from "@/types/supabase";
+import type { WalletChain, Wallet, Transaction } from "@/types/supabase";
 
 type DashboardClientProps = {
   userId?: string;
@@ -42,7 +42,6 @@ export function DashboardClient({
   const [error, setError] = useState<string | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
   const [isReady, setIsReady] = useState(false);
-  const tier: Tier = "pro";
   const walletLimit = PRO_LIMIT;
 
   // Client-side auth: ensure we have a user ID and update resolvedUserId
@@ -176,7 +175,6 @@ export function DashboardClient({
   }, [transactions, feedFilter]);
 
   const { isPollingError } = usePolling({
-    tier, // always pro
     wallets,
     isReady,
     telegramChatId: telegramChatIdState,
@@ -313,7 +311,6 @@ export function DashboardClient({
       </div>
 
       <StatsBar
-        tier={tier}
         walletCount={wallets.length}
         txCount={stats.txCount}
         whaleAlerts={stats.whaleAlerts}
@@ -323,7 +320,6 @@ export function DashboardClient({
       <div className="grid gap-4 md:grid-cols-[340px,1fr]">
         <div>
           <WalletRegistry
-            tier={tier}
             walletLimit={walletLimit}
             walletCount={wallets.length}
             wallets={wallets}
@@ -426,7 +422,6 @@ function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boole
 }
 
 type StatsBarProps = {
-  tier: "free" | "pro";
   walletCount: number;
   txCount: number;
   whaleAlerts: number;
@@ -434,7 +429,6 @@ type StatsBarProps = {
 };
 
 function StatsBar({
-  tier,
   walletCount,
   txCount,
   whaleAlerts,
@@ -514,7 +508,6 @@ function StatCell({ label, value, sub, valueColor }: StatCellProps) {
 }
 
 type WalletRegistryProps = {
-  tier: "free" | "pro";
   walletLimit: number;
   walletCount: number;
   wallets: Wallet[];
@@ -534,7 +527,6 @@ type WalletRegistryProps = {
 };
 
 function WalletRegistry({
-  tier,
   walletLimit,
   walletCount,
   wallets,
@@ -941,7 +933,6 @@ type TelegramSettingsProps = {
 };
 
 function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
-  const tier: "free" | "pro" = "pro";
   const [input, setInput] = useState(value ?? "");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -1004,13 +995,13 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
           style={{ color: "var(--amber2)" }}
         >
           ?
-        </a>{" "}
-        {tier === "pro" && hasSavedId && (
-          <span
-            className="inline-block h-2 w-2 rounded-full align-middle"
-            style={{ backgroundColor: "var(--green)" }}
-          />
-        )}
+                  </a>{" "}
+          {hasSavedId && (
+            <span
+              className="inline-block h-2 w-2 rounded-full align-middle"
+              style={{ backgroundColor: "var(--green)" }}
+            />
+          )}
       </div>
       <input
         className="w-full rounded border px-3 py-2 outline-none text-[11px]"

@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Tier, Wallet, Transaction } from "@/types/supabase";
+import type { Wallet, Transaction } from "@/types/supabase";
 
 type UsePollingOptions = {
-  tier: Tier;
   wallets: Wallet[];
   isReady: boolean;
   telegramChatId: string | null;
@@ -18,7 +17,6 @@ type PollResponse = {
 };
 
 export function usePolling({
-  tier,
   wallets,
   isReady,
   telegramChatId,
@@ -33,7 +31,7 @@ export function usePolling({
       return;
     }
 
-    const intervalMs = tier === "pro" ? 30_000 : 60_000;
+    const intervalMs = 30_000; // All users get pro polling
 
     const activeWallets = wallets.filter(w => w.is_active);
 
@@ -79,8 +77,8 @@ export function usePolling({
         }
 
         if (data.whaleAlerts?.length) {
-          // Telegram alerts (pro tier only)
-          if (tier === "pro" && telegramChatId) {
+          // Telegram alerts
+          if (telegramChatId) {
             for (const tx of data.whaleAlerts) {
               const direction =
                 tx.direction === "incoming" ? "received" : "sent";
@@ -150,7 +148,7 @@ export function usePolling({
       Object.values(timersRef.current).forEach(id => window.clearInterval(id));
       timersRef.current = {};
     };
-  }, [tier, wallets, isReady, telegramChatId, onNewTransactions, isPollingError]);
+  }, [wallets, isReady, telegramChatId, onNewTransactions, isPollingError]);
 
   return { isPollingError };
 }

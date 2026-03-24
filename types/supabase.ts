@@ -1,11 +1,10 @@
-export type Tier = "free" | "pro";
-
 export type WalletChain = "ethereum" | "bsc" | "solana";
 
 export interface Profile {
   id: string;
   email: string | null;
-  tier: Tier;
+  tier?: string | null; // Deprecated: kept for backward compatibility
+  whop_user_id: string | null; // Whop user ID mapping for access control
   telegram_chat_id: string | null;
   default_threshold: number | null;
   created_at: string;
@@ -34,4 +33,3 @@ export interface Transaction {
   is_whale: boolean | null;
   created_at: string;
 }
-

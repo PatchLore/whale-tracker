@@ -5,7 +5,8 @@ create extension if not exists "uuid-ossp";
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
-  tier text not null default 'free', -- 'free' or 'pro'
+  tier text, -- Deprecated: kept for backward compatibility, Whop now controls access
+  whop_user_id text, -- Whop user ID mapping for access control
   created_at timestamp with time zone not null default timezone('utc'::text, now())
 );
 

@@ -39,12 +39,12 @@ export function useActivationCheck(isNewLogin: boolean): ActivationState {
           return;
         }
 
-        if (profile?.tier === "pro") {
-          setActivated(true);
-          setTimeoutReached(false);
-          if (intervalId) clearInterval(intervalId);
-          if (timeoutId) clearTimeout(timeoutId);
-        }
+        // Activation check removed - Whop now controls access
+        // All users who reach dashboard are already verified by Whop
+        setActivated(true);
+        setTimeoutReached(false);
+        if (intervalId) clearInterval(intervalId);
+        if (timeoutId) clearTimeout(timeoutId);
       };
 
       // initial check
