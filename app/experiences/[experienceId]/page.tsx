@@ -37,12 +37,27 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       return <AccessDenied />;
     }
 
-    const meResponse = (await whopsdk.get("/me", {
-      headers: requestHeaders
-    })) as Record<string, unknown> & { data?: { email?: string } };
+    const token = requestHeaders.get("x-whop-user-token");
+    if (!token) {
+      throw new Error("Missing x-whop-user-token");
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const  userResponse = await fetch(`${appUrl}/api/whop/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!userResponse.ok) {
+      throw new Error(`Unable to fetch current user: ${userResponse.status}`);
+    }
+
+    const userJson = await userResponse.json();
     const email =
-      (typeof meResponse?.email === "string" ? meResponse.email : undefined) ??
-      meResponse?.data?.email;
+      (typeof userJson?.data?.email === "string" ? userJson.data.email : undefined) ??
+      (typeof userJson?.email === "string" ? userJson.email : undefined);
 
     if (!email) {
       throw new Error("No email");
