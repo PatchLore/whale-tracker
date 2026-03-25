@@ -11,19 +11,20 @@ function UnableToVerifySession() {
   return <div>Unable to verify Whop session</div>;
 }
 
-// Map URL slugs to actual Whop experience IDs (exp_xxx)
+// Map URL slugs to actual Whop experience IDs
 const experienceSlugToId: Record<string, string> = {
-  'whalenet-2e': process.env.NEXT_PUBLIC_EXPERIENCE_ID || 'exp_YOUR_ID_HERE',
-  // Add more mappings as needed
+  // Add mappings here if needed in the future
+  // Example: 'slug-name': 'actual-experience-id'
 };
 
 function resolveExperienceId(slugOrId: string): string {
-  // If it's already an exp_ ID, return as-is
-  if (slugOrId.startsWith('exp_')) {
+  // If it's already a valid experience ID format, return as-is
+  // Whop experience IDs can be slugs like 'whalenet-2e' or exp_ prefixed IDs
+  if (slugOrId.startsWith('exp_') || slugOrId.includes('-')) {
     return slugOrId;
   }
   
-  // Check if it's a known slug
+  // Check if it's a known slug mapping
   const mappedId = experienceSlugToId[slugOrId];
   if (mappedId) {
     console.log(`[ExperiencePage] Mapped slug "${slugOrId}" to ID "${mappedId}"`);
@@ -31,7 +32,7 @@ function resolveExperienceId(slugOrId: string): string {
   }
   
   // Unknown format - throw error
-  throw new Error(`Invalid experience identifier: "${slugOrId}". Must be an exp_ ID or a known slug.`);
+  throw new Error(`Invalid experience identifier: "${slugOrId}". Must be a valid experience ID or a known slug.`);
 }
 
 export default async function ExperiencePage({
