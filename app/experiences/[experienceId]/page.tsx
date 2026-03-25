@@ -11,14 +11,49 @@ function UnableToVerifySession() {
   return <div>Unable to verify Whop session</div>;
 }
 
+// Map URL slugs to actual Whop experience IDs (exp_xxx)
+const experienceSlugToId: Record<string, string> = {
+  'whalenet-2e': process.env.NEXT_PUBLIC_EXPERIENCE_ID || 'exp_YOUR_ID_HERE',
+  // Add more mappings as needed
+};
+
+function resolveExperienceId(slugOrId: string): string {
+  // If it's already an exp_ ID, return as-is
+  if (slugOrId.startsWith('exp_')) {
+    return slugOrId;
+  }
+  
+  // Check if it's a known slug
+  const mappedId = experienceSlugToId[slugOrId];
+  if (mappedId) {
+    console.log(`[ExperiencePage] Mapped slug "${slugOrId}" to ID "${mappedId}"`);
+    return mappedId;
+  }
+  
+  // Unknown format - throw error
+  throw new Error(`Invalid experience identifier: "${slugOrId}". Must be an exp_ ID or a known slug.`);
+}
+
 export default async function ExperiencePage({
   params,
 }: {
   params: Promise<{ experienceId: string }>;
 }) {
-  const { experienceId } = await params;
+  const { experienceId: rawExperienceId } = await params;
   const requestHeaders = await headers();
-
+  
+  // Resolve the actual experience ID
+  let experienceId: string;
+  try {
+    experienceId = resolveExperienceId(rawExperienceId);
+  } catch (error) {
+    console.error("[ExperiencePage] Invalid experience ID:", {
+      rawId: rawExperienceId,
+      error: error instanceof Error ? error.message : error,
+    });
+    return <UnableToVerifySession />;
+  }
+  
   // CRITICAL: Validate Whop token header exists
   const whopToken = requestHeaders.get("x-whop-user-token");
   if (!whopToken) {
