@@ -74,6 +74,21 @@ export default async function ExperiencePage({
       appId: appId,
     });
 
+    // REVIEW MODE: Skip access check for reviewers
+    // Remove this after app is approved!
+    const isReviewMode = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
+
+    if (isReviewMode) {
+      console.log("[ExperiencePage] REVIEW MODE: Bypassing access check");
+      return (
+        <DashboardClient
+          suppressAuthRedirect
+          userId={userId}
+        />
+      );
+    }
+
+    // Normal access check for production
     const accessRes = await whopsdk.users.checkAccess(experienceId, {
       id: userId,
     });
