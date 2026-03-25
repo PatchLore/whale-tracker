@@ -20,7 +20,9 @@ export default async function ExperiencePage({
     const { experienceId } = await params;
     const requestHeaders = await headers();
 
-    const { userId } = await whopsdk.verifyUserToken(requestHeaders);
+    const { userId } = await whopsdk.verifyUserToken(requestHeaders, {
+      appId: process.env.NEXT_PUBLIC_WHOP_APP_ID!
+    });
 
     const accessRes = await whopsdk.users.checkAccess(experienceId, {
       id: userId,
