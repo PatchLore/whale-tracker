@@ -35,14 +35,30 @@ function resolveExperienceId(slugOrId: string): string {
   throw new Error(`Invalid experience identifier: "${slugOrId}". Must be a valid experience ID or a known slug.`);
 }
 
+import { DemoDashboard } from "@/components/DemoDashboard";
+
 export default async function ExperiencePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ experienceId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { experienceId: rawExperienceId } = await params;
+  const { preview } = await searchParams;
   const requestHeaders = await headers();
   
+  // Check for preview mode via environment variable OR URL parameter
+  const isPreviewMode = 
+    process.env.NEXT_PUBLIC_REVIEW_MODE === "true" || 
+    preview === "true";
+
+  // If preview mode is enabled, show the demo dashboard with mock data
+  if (isPreviewMode) {
+    console.log("[ExperiencePage] PREVIEW MODE: Showing demo dashboard");
+    return <DemoDashboard />;
+  }
+
   // Resolve the actual experience ID
   let experienceId: string;
   try {
@@ -74,20 +90,6 @@ export default async function ExperiencePage({
     const { userId } = await whopsdk.verifyUserToken(requestHeaders, {
       appId: appId,
     });
-
-    // REVIEW MODE: Skip access check for reviewers
-    // Remove this after app is approved!
-    const isReviewMode = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
-
-    if (isReviewMode) {
-      console.log("[ExperiencePage] REVIEW MODE: Bypassing access check");
-      return (
-        <DashboardClient
-          suppressAuthRedirect
-          userId={userId}
-        />
-      );
-    }
 
     // Normal access check for production
     const accessRes = await whopsdk.users.checkAccess(experienceId, {

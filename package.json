@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "get-experience-id": "ts-node scripts/get-experience-id.ts",
+    "get-company-id": "ts-node scripts/get-company-id.ts",
+    "create-experience": "ts-node scripts/create-experience.ts",
+    "list-products": "ts-node scripts/list-products.ts",
+    "product-details": "ts-node scripts/product-details.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.9.0",
@@ -26,11 +31,14 @@
     "@types/node": "^25.4.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/dotenv": "^8.2.0",
     "autoprefixer": "^10.4.27",
+    "dotenv": "^16.4.7",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.35",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }
