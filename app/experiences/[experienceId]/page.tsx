@@ -48,10 +48,8 @@ export default async function ExperiencePage({
   const { preview } = await searchParams;
   const requestHeaders = await headers();
   
-  // Check for preview mode via environment variable OR URL parameter
-  const isPreviewMode = 
-    process.env.NEXT_PUBLIC_REVIEW_MODE === "true" || 
-    preview === "true";
+  // Check for preview mode via URL parameter only (for screenshots)
+  const isPreviewMode = preview === "true";
 
   // If preview mode is enabled, show the demo dashboard with mock data
   if (isPreviewMode) {
