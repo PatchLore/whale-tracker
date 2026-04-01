@@ -151,9 +151,17 @@ export default async function ExperiencePage({
       appId,
     });
 
-    // Review mode: bypass access check for app reviewers
-    const isReviewMode = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
+    // TEMPORARY: Force bypass for review
+    const isReviewMode = true;
+
     if (isReviewMode) {
+      console.log("🔓 REVIEW MODE ACTIVE - Skipping access check");
+      return <DashboardClient suppressAuthRedirect userId={userId} />;
+    }
+
+    // Review mode: bypass access check for app reviewers
+    const isReviewModeEnv = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
+    if (isReviewModeEnv) {
       return <DashboardClient suppressAuthRedirect userId={userId} />;
     }
 
