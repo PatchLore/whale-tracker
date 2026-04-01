@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ActivationRedirect } from "./ActivationRedirect";
+import { WHOP_EXPERIENCE_SLUG } from "@/lib/config";
 
 export default async function Home() {
   const requestHeaders = await headers();
@@ -9,7 +10,7 @@ export default async function Home() {
 
   // If request is from Whop iframe, redirect to experience instead of showing landing page
   if (whopUserToken) {
-    redirect("/experiences/whalenet-2e");
+    redirect(`/experiences/${WHOP_EXPERIENCE_SLUG}`);
   }
 
   return (

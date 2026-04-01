@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { WHOP_EXPERIENCE_SLUG, WHOP_STORE_URL } from "@/lib/config";
 
 export default async function SubscribePage() {
   const requestHeaders = await headers();
@@ -7,7 +8,7 @@ export default async function SubscribePage() {
 
   // If request is from Whop iframe, redirect to experience instead of showing subscribe page
   if (whopUserToken) {
-    redirect("/experiences/whalenet-2e");
+    redirect(`/experiences/${WHOP_EXPERIENCE_SLUG}`);
   }
 
   return (
@@ -15,7 +16,8 @@ export default async function SubscribePage() {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: "#060501" }}
     >
-      <div className="w-full max-w-md rounded-xl border px-6 py-8 shadow-[0_0_40px_rgba(255,179,0,0.15)]"
+      <div
+        className="w-full max-w-md rounded-xl border px-6 py-8 shadow-[0_0_40px_rgba(255,179,0,0.15)]"
         style={{ borderColor: "var(--border2)", backgroundColor: "rgba(0,0,0,0.6)" }}
       >
         <header className="mb-6 text-center">
@@ -38,7 +40,7 @@ export default async function SubscribePage() {
         </div>
 
         <a
-          href="https://whop.com/whalenet-2e/"
+          href={WHOP_STORE_URL}
           target="_blank"
           rel="noreferrer"
           className="mt-8 block w-full rounded-md border px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.25em] transition"
@@ -46,7 +48,7 @@ export default async function SubscribePage() {
             borderColor: "rgba(255,179,0,0.6)",
             backgroundImage: "linear-gradient(135deg, var(--amber), var(--amber2))",
             color: "var(--bg)",
-            fontFamily: "var(--font-orbitron)"
+            fontFamily: "var(--font-orbitron)",
           }}
         >
           Subscribe on Whop — £9.99/mo
@@ -55,4 +57,3 @@ export default async function SubscribePage() {
     </main>
   );
 }
-

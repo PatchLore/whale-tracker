@@ -24,14 +24,12 @@ async function getWhopUserIdFromToken(token: string): Promise<string | null> {
     });
 
     if (!res.ok) {
-      console.error("[WhopAccess] Failed to validate Whop token:", res.status);
       return null;
     }
 
     const user = await res.json();
     return user.id || null;
-  } catch (error) {
-    console.error("[WhopAccess] Error validating Whop token:", error);
+  } catch {
     return null;
   }
 }
@@ -47,30 +45,26 @@ async function getWhopUserIdFromToken(token: string): Promise<string | null> {
 export async function checkWhopAccess(identifier: string): Promise<boolean> {
   // First, check if identifier looks like a Whop token
   // Whop tokens are typically JWT-like or have specific format
-  const mightBeToken = identifier.includes('.') || identifier.startsWith('eyJ'); // JWT heuristic
-  
+  const mightBeToken = identifier.includes(".") || identifier.startsWith("eyJ"); // JWT heuristic
+
   let whopUserId: string;
-  
+
   if (mightBeToken) {
     // It might be a Whop token, try to extract user ID
     const userId = await getWhopUserIdFromToken(identifier);
     if (!userId) {
       // Fail closed - if token is invalid, deny access
-      console.log(`[WhopAccess] Invalid Whop token provided`);
       return false;
     }
     whopUserId = userId;
   } else {
     // Assume it's already a Whop user ID
-    // Note: This could also be a Supabase user ID, but we can't map it without Supabase
-    // For now, we'll assume it's a Whop user ID
     whopUserId = identifier;
   }
 
   // Check cache first
   const cached = cache.get(whopUserId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`[WhopAccess] Cache hit for Whop user ${whopUserId}`);
     return cached.hasAccess;
   }
 
@@ -83,29 +77,29 @@ export async function checkWhopAccess(identifier: string): Promise<boolean> {
   }
 
   try {
-    console.log(`[WhopAccess] Checking access for Whop user ${whopUserId} to company ${companyId}`);
-    
     const accessRes = await whopsdk.users.checkAccess(companyId, {
-      id: whopUserId
+      id: whopUserId,
     });
 
     const hasAccess = accessRes.has_access === true;
-    
+
     // Update cache
-    cache.set(whopUserId, { 
-      hasAccess, 
-      timestamp: Date.now() 
+    cache.set(whopUserId, {
+      hasAccess,
+      timestamp: Date.now(),
     });
-    
-    console.log(`[WhopAccess] Whop user ${whopUserId} access: ${hasAccess}`);
+
     return hasAccess;
   } catch (error) {
-    console.error(`[WhopAccess] Error checking access for Whop user ${whopUserId}:`, error);
-    
+    console.error(
+      `[WhopAccess] Error checking access for Whop user ${whopUserId}:`,
+      error
+    );
+
     // Fail closed - if API fails, deny access
-    cache.set(whopUserId, { 
-      hasAccess: false, 
-      timestamp: Date.now() 
+    cache.set(whopUserId, {
+      hasAccess: false,
+      timestamp: Date.now(),
     });
     return false;
   }
@@ -116,7 +110,6 @@ export async function checkWhopAccess(identifier: string): Promise<boolean> {
  */
 export function clearWhopAccessCache(whopUserId: string): void {
   cache.delete(whopUserId);
-  console.log(`[WhopAccess] Cleared cache for Whop user ${whopUserId}`);
 }
 
 /**
@@ -124,7 +117,6 @@ export function clearWhopAccessCache(whopUserId: string): void {
  */
 export function clearAllWhopAccessCache(): void {
   cache.clear();
-  console.log("[WhopAccess] Cleared all cache entries");
 }
 
 /**
@@ -151,13 +143,13 @@ export async function getWhopUserIdForAccessCheck(
       return whopUserId;
     }
   }
-  
+
   // 2. Try to get Whop user ID from cookie
   const whopUserIdFromCookie = requestCookies.get("whop_user_id")?.value;
   if (whopUserIdFromCookie) {
     return whopUserIdFromCookie;
   }
-  
+
   // 3. No Whop identifier found
   return null;
 }

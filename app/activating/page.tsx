@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useActivationCheck } from "@/lib/hooks/useActivationCheck";
+import { WHOP_STORE_URL } from "@/lib/config";
 
 export default function ActivatingPage() {
   const { activated, timeout } = useActivationCheck(true);
@@ -64,7 +65,7 @@ export default function ActivatingPage() {
                   Try Dashboard
                 </a>
                 <a
-                  href="https://whop.com/whalenet-2e/"
+                  href={WHOP_STORE_URL}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full rounded-md border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
