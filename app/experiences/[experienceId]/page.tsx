@@ -115,16 +115,34 @@ export default async function ExperiencePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { experienceId: rawExperienceId } = await params;
-  const { preview } = await searchParams;
-  const requestHeaders = await headers();
+  const { preview, review } = await searchParams;
+
+  // ============================================
+  // COMPLETE BYPASS FOR REVIEW MODE
+  // ============================================
+  // Triggered by: hardcoded flag, NEXT_PUBLIC_REVIEW_MODE env var, or ?review=true query param
+  const HARDCODED_REVIEW_MODE = true; // TEMPORARY: Set to false after approval
+  const isReviewMode =
+    HARDCODED_REVIEW_MODE ||
+    process.env.NEXT_PUBLIC_REVIEW_MODE === "true" ||
+    review === "true";
+
+  if (isReviewMode) {
+    console.log("[ExperiencePage] 🔓 REVIEW MODE ACTIVE — Complete bypass, showing demo dashboard");
+    return <DemoDashboard />;
+  }
+  // ============================================
+  // NO AUTHENTICATION CODE RUNS BEYOND THIS POINT IN REVIEW MODE
+  // ============================================
 
   // Check for preview mode via URL parameter only (for screenshots)
   const isPreviewMode = preview === "true";
-
-  // If preview mode is enabled, show the demo dashboard with mock data
   if (isPreviewMode) {
     return <DemoDashboard />;
   }
+
+  // Normal flow for customers (only runs when review mode is OFF)
+  const requestHeaders = await headers();
 
   // Resolve the actual experience ID
   let experienceId: string;
@@ -150,20 +168,6 @@ export default async function ExperiencePage({
     const { userId } = await whopsdk.verifyUserToken(requestHeaders, {
       appId,
     });
-
-    // TEMPORARY: Force bypass for review
-    const isReviewMode = true;
-
-    if (isReviewMode) {
-      console.log("🔓 REVIEW MODE ACTIVE - Skipping access check");
-      return <DashboardClient suppressAuthRedirect userId={userId} />;
-    }
-
-    // Review mode: bypass access check for app reviewers
-    const isReviewModeEnv = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
-    if (isReviewModeEnv) {
-      return <DashboardClient suppressAuthRedirect userId={userId} />;
-    }
 
     // Normal access check for production
     const accessRes = await whopsdk.users.checkAccess(experienceId, {
