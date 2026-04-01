@@ -6,10 +6,11 @@ export default async function SubscribePage() {
   const requestHeaders = await headers();
   const whopUserToken = requestHeaders.get("x-whop-user-token");
 
+  // TEMPORARILY DISABLED FOR REVIEW — re-enable after approval
   // If request is from Whop iframe, redirect to experience instead of showing subscribe page
-  if (whopUserToken) {
-    redirect(`/experiences/${WHOP_EXPERIENCE_SLUG}`);
-  }
+  // if (whopUserToken) {
+  //   redirect(`/experiences/${WHOP_EXPERIENCE_SLUG}`);
+  // }
 
   return (
     <main

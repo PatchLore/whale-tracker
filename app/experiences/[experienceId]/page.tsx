@@ -151,6 +151,12 @@ export default async function ExperiencePage({
       appId,
     });
 
+    // Review mode: bypass access check for app reviewers
+    const isReviewMode = process.env.NEXT_PUBLIC_REVIEW_MODE === "true";
+    if (isReviewMode) {
+      return <DashboardClient suppressAuthRedirect userId={userId} />;
+    }
+
     // Normal access check for production
     const accessRes = await whopsdk.users.checkAccess(experienceId, {
       id: userId,
