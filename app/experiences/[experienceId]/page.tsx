@@ -128,8 +128,10 @@ export default async function ExperiencePage({
     review === "true";
 
   if (isReviewMode) {
-    console.log("[ExperiencePage] 🔓 REVIEW MODE ACTIVE — Complete bypass, showing demo dashboard");
-    return <DemoDashboard />;
+    console.log("[ExperiencePage] 🔓 REVIEW MODE ACTIVE — Showing real dashboard, skipping access check");
+    // Show the REAL dashboard, but skip the subscription check
+    // Reviewers see the actual app UI with real functionality
+    return <DashboardClient suppressAuthRedirect userId="reviewer" />;
   }
   // ============================================
   // NO AUTHENTICATION CODE RUNS BEYOND THIS POINT IN REVIEW MODE
