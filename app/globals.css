@@ -20,12 +20,12 @@
 }
 
 html.light {
-  --bg: #ffffff;
-  --surface: #f8fafc;
-  --card: #f1f5f9;
-  --card2: #e2e8f0;
-  --border: #cbd5e1;
-  --border2: #94a3b8;
+  --bg: #f5f7f9;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card2: #f8fafc;
+  --border: #e5e7eb;
+  --border2: #cbd5e1;
   --amber: #ca8a04;
   --amber2: #c2410c;
   --amber3: #fde68a;
@@ -35,7 +35,20 @@ html.light {
   --muted: #475569;
   --text: #0f172a;
   --text2: #475569;
-  --dim: #64748b;
+  --dim: #475569;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+html.dark .card {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
 html.dark {
