@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usePolling } from "@/lib/hooks/usePolling";
+import { NetworkSelector } from "@/components/NetworkSelector";
+import { SupportButton } from "@/components/SupportButton";
 import type { WalletChain, Wallet, Transaction } from "@/types/supabase";
 
 type DashboardClientProps = {
@@ -96,30 +98,32 @@ export function DashboardClient({
         setIsReady(true);
         return;
       }
-      const [
-        { data: walletData },
-        { data: txData },
-        { data: profile }
-      ] = await Promise.all([
-        supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", resolvedUserId)
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("transactions")
-          .select("*")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("profiles")
-          .select("telegram_chat_id")
-          .eq("id", resolvedUserId)
-          .single()
+
+      const walletPromise = fetch("/api/wallets");
+      const txPromise = supabase
+        .from("transactions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      const profilePromise = supabase
+        .from("profiles")
+        .select("telegram_chat_id")
+        .eq("id", resolvedUserId)
+        .single();
+
+      const [walletRes, { data: txData }, { data: profile }] = await Promise.all([
+        walletPromise,
+        txPromise,
+        profilePromise
       ]);
 
-      if (walletData) {
-        setWallets(walletData as Wallet[]);
+      if (walletRes.ok) {
+        const walletData = (await walletRes.json()) as Wallet[];
+        setWallets(walletData);
+      } else {
+        const body = await walletRes.json().catch(() => null);
+        setError(body?.error || "Unable to load wallets");
       }
+
       if (txData) {
         setTransactions(txData as Transaction[]);
       }
@@ -198,65 +202,44 @@ export function DashboardClient({
     chain: WalletChain;
     threshold: number;
   }) => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      // eslint-disable-next-line no-alert
-      alert("Supabase is not configured.");
-      return;
-    }
-
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
-    const insertUserId = session?.user?.id;
-    if (!insertUserId) {
-      setError("Not authenticated");
-      return;
-    }
-
     if (wallets.length >= walletLimit) {
       // eslint-disable-next-line no-alert
       alert(`Wallet limit reached (${PRO_LIMIT} wallets).`);
       return;
     }
 
-    const { data, error } = await supabase
-      .from("wallets")
-      .insert({
-        user_id: insertUserId,
-        label: payload.label || null,
-        address: payload.address,
-        chain: payload.chain,
-        threshold: payload.threshold
-      })
-      .select("*")
-      .single();
+    const response = await fetch("/api/wallets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
-    if (error) {
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
       // eslint-disable-next-line no-alert
-      alert(error.message);
+      alert(body?.error || "Unable to add wallet.");
       return;
     }
 
-    setWallets(prev => [...prev, data as Wallet]);
+    const wallet = (await response.json()) as Wallet;
+    setWallets(prev => [...prev, wallet]);
   };
 
   const handleRemoveWallet = async (walletId: string) => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      // eslint-disable-next-line no-alert
-      alert("Supabase is not configured.");
-      return;
-    }
+    const response = await fetch("/api/wallets", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: walletId })
+    });
 
-    const { error } = await supabase
-      .from("wallets")
-      .delete()
-      .eq("id", walletId);
-
-    if (error) {
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
       // eslint-disable-next-line no-alert
-      alert(error.message);
+      alert(body?.error || "Unable to remove wallet.");
       return;
     }
 
@@ -268,20 +251,18 @@ export function DashboardClient({
     walletId: string,
     newThreshold: number
   ) => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      // eslint-disable-next-line no-alert
-      alert("Supabase is not configured.");
-      return;
-    }
-    const { error } = await supabase
-      .from("wallets")
-      .update({ threshold: newThreshold })
-      .eq("id", walletId);
+    const response = await fetch("/api/wallets", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: walletId, threshold: newThreshold })
+    });
 
-    if (error) {
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
       // eslint-disable-next-line no-alert
-      alert(error.message);
+      alert(body?.error || "Unable to update threshold.");
       return;
     }
 
@@ -295,6 +276,8 @@ export function DashboardClient({
   return (
     <div className="relative z-10 mx-auto max-w-5xl px-5 pt-7 pb-20">
       <Header suppressAuthRedirect={suppressAuthRedirect} />
+
+      <BillingBanner />
 
       <div
         className="mb-4 rounded-lg border px-4 py-3 text-[10px]"
@@ -402,6 +385,7 @@ function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boole
           <span className="h-[7px] w-[7px] rounded-full bg-[var(--green)] animate-pulse" />
           MONITORING ACTIVE
         </div>
+        <SupportButton />
         {!suppressAuthRedirect && (
           <button
             type="button"
@@ -418,6 +402,16 @@ function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boole
         )}
       </div>
     </header>
+  );
+}
+
+function BillingBanner() {
+  return (
+    <div className="mb-6 rounded-xl border border-amber-300/30 bg-amber-50 px-4 py-3 text-[11px] text-amber-900 dark:border-amber-500/25 dark:bg-amber-950/10 dark:text-amber-100">
+      <p>
+        💰 You are on the Pro plan — £9.99/month. Cancel anytime in your Whop settings.
+      </p>
+    </div>
   );
 }
 
@@ -734,55 +728,7 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
             onChange={e => setThreshold(e.target.value)}
           />
         </div>
-        <div>
-          <div
-            className="mb-1 text-[9px] tracking-[0.2em] uppercase"
-            style={{ color: "var(--muted)" }}
-          >
-            CHAIN
-          </div>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {(["ethereum", "bsc", "solana"] as WalletChain[]).map(option => {
-              const isEth = option === "ethereum";
-              const isActive = chain === option;
-              const disabled = !isEth;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => {
-                    if (!disabled) {
-                      setChain(option);
-                    }
-                  }}
-                  title={disabled ? "Coming soon" : undefined}
-                  className="rounded border px-3 py-1 text-[9px] tracking-[0.2em] uppercase transition"
-                  style={{
-                    borderColor: isActive ? "var(--amber2)" : "var(--border)",
-                    backgroundColor: isActive
-                      ? "rgba(255,140,0,0.08)"
-                      : "transparent",
-                    color: disabled
-                      ? "var(--muted)"
-                      : isActive
-                      ? "var(--amber2)"
-                      : "var(--muted)",
-                    fontFamily: "var(--font-plex-mono)",
-                    opacity: disabled ? 0.4 : 1,
-                    cursor: disabled ? "not-allowed" : "pointer"
-                  }}
-                >
-                  {option === "ethereum"
-                    ? "ETH"
-                    : option === "bsc"
-                    ? "BSC"
-                    : "SOL"}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <NetworkSelector value={chain} onChange={setChain} />
       </div>
 
       <button
