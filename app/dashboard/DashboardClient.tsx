@@ -298,15 +298,12 @@ export function DashboardClient({
       <BillingBanner />
 
       <div
-        className="mb-4 rounded-lg border px-4 py-3 text-[10px]"
+        className="mb-4 rounded-lg border border-amber-300/30 px-4 py-3 text-[10px] founding-banner"
         style={{
-          borderColor: "rgba(255,179,0,0.25)",
-          backgroundColor: "rgba(255,179,0,0.05)",
-          color: "var(--amber2)",
           fontFamily: "var(--font-plex-mono)"
         }}
       >
-        <div className="text-[11px]" style={{ color: "var(--text2)" }}>
+        <div className="text-[11px] text-slate-700 dark:text-amber-100" style={{ color: "var(--text2)" }}>
           🐋 Founding Member Deal — First 10 subscribers get BSC, Solana, Discord &amp; CSV export free when they launch · You&apos;re locked in at £9.99/mo
         </div>
       </div>
@@ -391,12 +388,11 @@ function Header({
     <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
       <div>
         <div
-          className="font-bold tracking-[0.5em] text-3xl sm:text-4xl md:text-5xl"
+          className="logo-heading font-bold tracking-[0.5em] text-3xl sm:text-4xl md:text-5xl"
           style={{
             fontFamily: "var(--font-orbitron)",
-            color: "var(--amber)",
             textShadow:
-              "0 0 40px rgba(255,179,0,0.4), 0 0 80px rgba(255,179,0,0.15)"
+              "0 0 20px rgba(0,0,0,0.04), 0 0 40px rgba(0,0,0,0.05)"
           }}
         >
           WHALE<span style={{ color: "var(--amber2)" }}>NET</span>
@@ -409,8 +405,8 @@ function Header({
         </p>
       </div>
       <div className="flex flex-col items-end gap-2 text-[10px]">
-        <div className="inline-flex items-center gap-2 rounded border border-[rgba(57,255,110,0.3)] bg-[rgba(57,255,110,0.08)] px-3 py-1 tracking-[0.3em] text-[10px] uppercase text-[var(--green)]">
-          <span className="h-[7px] w-[7px] rounded-full bg-[var(--green)] animate-pulse" />
+        <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 tracking-[0.3em] text-[10px] uppercase monitoring-badge">
+          <span className="dot h-[7px] w-[7px] rounded-full" />
           MONITORING ACTIVE
         </div>
         <div className="rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[10px] text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
@@ -445,8 +441,8 @@ function Header({
 
 function BillingBanner() {
   return (
-    <div className="mb-6 rounded-xl border border-amber-300/30 bg-amber-50 px-4 py-3 text-[11px] text-amber-900 dark:border-amber-500/25 dark:bg-amber-950/10 dark:text-amber-100">
-      <p>
+    <div className="mb-6 rounded-xl border border-amber-300/30 bg-amber-50 px-4 py-3 text-[11px] text-amber-900 dark:border-amber-500/25 dark:bg-amber-950/10 dark:text-amber-100 founding-banner">
+      <p className="text-slate-700 dark:text-amber-100">
         💰 You are on the Pro plan — £9.99/month. Cancel anytime in your Whop settings.
       </p>
     </div>
@@ -514,7 +510,7 @@ type StatCellProps = {
 function StatCell({ label, value, sub, valueColor }: StatCellProps) {
   return (
     <div
-      className="bg-[var(--surface)] px-4 py-3"
+      className="stat-card bg-[var(--surface)] px-4 py-3"
       style={{ backgroundColor: "var(--surface)" }}
     >
       <div
@@ -524,7 +520,7 @@ function StatCell({ label, value, sub, valueColor }: StatCellProps) {
         {label}
       </div>
       <div
-        className="text-xl font-bold"
+        className="stat-value font-bold"
         style={{
           fontFamily: "var(--font-orbitron)",
           color: valueColor ?? "var(--amber3)"
@@ -577,15 +573,14 @@ function WalletRegistry({
       style={{ backgroundColor: "var(--surface)", borderColor: "var(--border2)" }}
     >
       <header
-        className="flex items-center justify-between border-b px-4 py-3"
+        className="flex items-center justify-between border-b px-4 py-3 wallet-section-header"
         style={{
-          borderColor: "var(--border)",
-          backgroundColor: "rgba(255,179,0,0.03)"
+          borderColor: "var(--border)"
         }}
       >
         <div
           className="text-[11px] uppercase tracking-[0.3em]"
-          style={{ fontFamily: "var(--font-orbitron)", color: "var(--amber2)" }}
+          style={{ fontFamily: "var(--font-orbitron)", color: "var(--teal-strong)" }}
         >
           ⬡ WALLET REGISTRY
         </div>
@@ -713,11 +708,8 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
           WALLET LABEL
         </div>
         <input
-          className="w-full rounded border px-3 py-2 outline-none"
+          className="w-full rounded border px-3 py-2 outline-none light-input"
           style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--border2)",
-            color: "var(--amber3)",
             fontFamily: "var(--font-plex-mono)"
           }}
           placeholder="e.g. Justin Sun Wallet"
@@ -733,11 +725,8 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
           WALLET ADDRESS (ETH/SOL)
         </div>
         <input
-          className="w-full rounded border px-3 py-2 outline-none"
+          className="w-full rounded border px-3 py-2 outline-none light-input"
           style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--border2)",
-            color: "var(--amber3)",
             fontFamily: "var(--font-plex-mono)"
           }}
           placeholder="0x... or base58..."
@@ -755,11 +744,8 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
           </div>
           <input
             type="number"
-            className="w-full rounded border px-3 py-2 outline-none"
+            className="w-full rounded border px-3 py-2 outline-none light-input"
             style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--border2)",
-              color: "var(--amber3)",
               fontFamily: "var(--font-plex-mono)"
             }}
             value={threshold}
@@ -772,11 +758,8 @@ function AddWalletForm({ disabled, onSubmit, defaultThreshold }: AddWalletFormPr
       <button
         type="submit"
         disabled={isDisabled}
-        className="mt-1 w-full rounded border px-4 py-2 text-[11px] font-medium uppercase tracking-[0.25em] transition"
+        className="mt-1 w-full rounded px-4 py-2 text-[11px] font-medium uppercase tracking-[0.25em] transition teal-button"
         style={{
-          borderColor: "rgba(255,179,0,0.4)",
-          backgroundColor: "rgba(255,179,0,0.1)",
-          color: "var(--amber)",
           fontFamily: "var(--font-orbitron)",
           opacity: isDisabled ? 0.6 : 1,
           cursor: isDisabled ? "not-allowed" : "pointer"
@@ -988,11 +971,8 @@ function TelegramSettings({ userId, value, onChange }: TelegramSettingsProps) {
           )}
       </div>
       <input
-        className="w-full rounded border px-3 py-2 outline-none text-[11px]"
+        className="w-full rounded border px-3 py-2 outline-none text-[11px] light-input"
         style={{
-          backgroundColor: "var(--card)",
-          borderColor: "var(--border2)",
-          color: "var(--amber3)",
           fontFamily: "var(--font-plex-mono)"
         }}
         placeholder="e.g. 123456789"

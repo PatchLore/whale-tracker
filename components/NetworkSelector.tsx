@@ -40,7 +40,7 @@ export function NetworkSelector({ value, onChange }: Props) {
     <div>
       <label
         htmlFor="network-selector"
-        className="mb-1 block text-[9px] tracking-[0.2em] uppercase text-slate-400 dark:text-slate-500"
+        className="mb-1 block text-[11px] tracking-[0.3em] uppercase text-slate-600 dark:text-slate-500"
       >
         Network
       </label>
@@ -48,11 +48,18 @@ export function NetworkSelector({ value, onChange }: Props) {
         id="network-selector"
         value={value}
         onChange={e => onChange(e.target.value as WalletChain)}
-        className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-300/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 network-select"
       >
         {NETWORK_OPTIONS.map(option => (
-          <option key={option.chain} value={option.chain} disabled={!option.available}>
-            {option.label} {option.available ? "" : "— coming soon"}
+          <option
+            key={option.chain}
+            value={option.chain}
+            disabled={!option.available}
+            className={option.available ? undefined : "coming-soon-badge"}
+            style={{ color: option.available ? undefined : "#94a3b8" }}
+          >
+            {option.label}
+            {option.available ? "" : " — soon"}
           </option>
         ))}
       </select>

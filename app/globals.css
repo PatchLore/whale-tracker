@@ -30,25 +30,126 @@ html.light {
   --amber2: #c2410c;
   --amber3: #fde68a;
   --red: #ef4444;
-  --green: #16a34a;
+  --green: #166534;
+  --green-soft: #dcfce7;
+  --teal: #0f766e;
+  --teal-strong: #115e59;
   --blue: #0284c7;
   --muted: #475569;
   --text: #0f172a;
   --text2: #475569;
   --dim: #475569;
+  --logo-text: #1a1a2e;
 }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+html.light .logo-heading {
+  color: var(--logo-text);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
-html.dark .card {
-  background: var(--card);
-  border-color: var(--border);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+html.light .logo-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  width: 70%;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #f59e0b, #c2410c);
+  opacity: 0.95;
+  animation: logo-accent-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes logo-accent-pulse {
+  0%, 100% { transform: scaleX(1); opacity: 0.85; }
+  50% { transform: scaleX(0.95); opacity: 1; }
+}
+
+html.light .monitoring-badge {
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  background: var(--green-soft);
+  color: #166534;
+}
+
+html.light .monitoring-badge .dot {
+  background: #166534;
+  animation: badge-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+html.light .stat-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  border-left: 3px solid #0f766e;
+}
+
+html.light .stat-card .stat-value {
+  font-size: 2.25rem;
+  line-height: 1;
+  color: #0f172a;
+}
+
+html.light .wallet-section-header {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+html.light .light-input {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+html.light .light-input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+}
+
+html.light .teal-button {
+  background-color: #0f766e;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+html.light .teal-button:hover {
+  background-color: #115e59;
+}
+
+html.light .network-select {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+html.light .network-select option {
+  color: #0f172a;
+}
+
+html.light .network-select option:disabled {
+  color: #94a3b8;
+}
+
+html.light .network-select option:hover {
+  background: #ecfdf5;
+}
+
+html.light .coming-soon-badge {
+  color: #94a3b8;
+}
+
+html.light .founding-banner {
+  background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+  border-left: 4px solid #f59e0b;
+  color: #334155;
+}
+
+html.light body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 html.dark {
