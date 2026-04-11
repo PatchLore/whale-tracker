@@ -1,69 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const WHOP_API_BASE = "https://api.whop.com";
+import { whopsdk } from "@/lib/whop-sdk";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const message = String(body?.message ?? "").trim();
+    const userId = String(body?.userId ?? "").trim();
 
-    if (!message) {
+    if (!message || !userId) {
       return NextResponse.json(
-        { error: "Message content is required." },
+        { error: "Message and userId are required." },
         { status: 400 }
       );
     }
 
-    const apiKey = process.env.WHOP_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "WHOP_API_KEY is not configured." },
-        { status: 500 }
-      );
-    }
-
-    const channelId =
-      process.env.WHOP_SUPPORT_CHANNEL_ID ||
-      process.env.NEXT_PUBLIC_WHOP_APP_ID;
-
-    if (!channelId) {
+    const companyId = process.env.WHOP_COMPANY_ID ?? process.env.NEXT_PUBLIC_WHOP_COMPANY_ID;
+    if (!companyId) {
       return NextResponse.json(
         {
           error:
-            "Support channel ID is not configured. Set WHOP_SUPPORT_CHANNEL_ID or NEXT_PUBLIC_WHOP_APP_ID."
+            "WHOP_COMPANY_ID or NEXT_PUBLIC_WHOP_COMPANY_ID is not configured. This is required to create a support channel."
         },
         { status: 500 }
       );
     }
 
-    const response = await fetch(`${WHOP_API_BASE}/v1/messages`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        channel_id: channelId,
-        content: message
-      }),
-      cache: "no-store"
+    const supportChannel = await whopsdk.supportChannels.create({
+      company_id: companyId,
+      user_id: userId
     });
 
-    if (!response.ok) {
-      const payload = await response.text();
-      return NextResponse.json(
-        { error: `Whop API error: ${response.status}`, details: payload },
-        { status: response.status }
-      );
-    }
+    const sentMessage = await whopsdk.messages.create({
+      channel_id: supportChannel.id,
+      content: message
+    });
 
-    const payload = await response.json();
-    return NextResponse.json({ ok: true, message: payload });
+    return NextResponse.json({
+      success: true,
+      messageId: sentMessage.id,
+      channelId: supportChannel.id
+    });
   } catch (error) {
+    console.error("[Support API] Error:", error);
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Unknown error while sending support message."
+          error instanceof Error
+            ? error.message
+            : "Failed to send support message."
       },
       { status: 500 }
     );

@@ -2,7 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 
-export function SupportButton() {
+interface SupportButtonProps {
+  userId: string;
+}
+
+export function SupportButton({ userId }: SupportButtonProps) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -25,7 +29,7 @@ export function SupportButton() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message: trimmed })
+      body: JSON.stringify({ message: trimmed, userId })
     });
 
     if (!response.ok) {

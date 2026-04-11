@@ -288,7 +288,12 @@ export function DashboardClient({
 
   return (
     <div className="relative z-10 mx-auto max-w-5xl px-5 pt-7 pb-20">
-      <Header suppressAuthRedirect={suppressAuthRedirect} />
+      <Header
+        suppressAuthRedirect={suppressAuthRedirect}
+        theme={theme}
+        userId={resolvedUserId}
+        onToggleTheme={() => setTheme(prev => (prev === "dark" ? "light" : "dark"))}
+      />
 
       <BillingBanner />
 
@@ -357,7 +362,17 @@ export function DashboardClient({
   );
 }
 
-function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boolean }) {
+function Header({
+  suppressAuthRedirect = false,
+  theme,
+  userId,
+  onToggleTheme
+}: {
+  suppressAuthRedirect?: boolean;
+  theme: "light" | "dark";
+  userId: string;
+  onToggleTheme: () => void;
+}) {
   const handleLogout = async () => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
@@ -403,12 +418,12 @@ function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boole
         </div>
         <button
           type="button"
-          onClick={() => setTheme(prev => (prev === "dark" ? "light" : "dark"))}
+          onClick={onToggleTheme}
           className="rounded border border-slate-700 bg-slate-200 px-3 py-1 text-[10px] tracking-[0.2em] uppercase text-slate-900 transition hover:bg-slate-300 dark:border-slate-400 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
         >
           {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
         </button>
-        <SupportButton />
+        <SupportButton userId={userId} />
         {!suppressAuthRedirect && (
           <button
             type="button"
