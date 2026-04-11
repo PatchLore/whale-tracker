@@ -43,6 +43,7 @@ export function DashboardClient({
   const [hasRequestedNotifications, setHasRequestedNotifications] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resolvedUserId, setResolvedUserId] = useState<string>(userId ?? "");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [isReady, setIsReady] = useState(false);
   const walletLimit = PRO_LIMIT;
 
@@ -149,6 +150,18 @@ export function DashboardClient({
   // }, [router, searchParams]);
 
   // Browser notification permission on dashboard load
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
+  }, [theme]);
+
   useEffect(() => {
     if (hasRequestedNotifications) return;
     if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -385,6 +398,16 @@ function Header({ suppressAuthRedirect = false }: { suppressAuthRedirect?: boole
           <span className="h-[7px] w-[7px] rounded-full bg-[var(--green)] animate-pulse" />
           MONITORING ACTIVE
         </div>
+        <div className="rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[10px] text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+          Theme: {theme === "dark" ? "Dark" : "Light"}
+        </div>
+        <button
+          type="button"
+          onClick={() => setTheme(prev => (prev === "dark" ? "light" : "dark"))}
+          className="rounded border border-slate-700 bg-slate-200 px-3 py-1 text-[10px] tracking-[0.2em] uppercase text-slate-900 transition hover:bg-slate-300 dark:border-slate-400 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
+        >
+          {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+        </button>
         <SupportButton />
         {!suppressAuthRedirect && (
           <button

@@ -1,22 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #060501;
-  --surface: #0a0800;
-  --card: #0f0c01;
-  --card2: #141005;
-  --border: #2a1f00;
-  --border2: #3d2e00;
-  --amber: #ffb300;
-  --amber2: #ff8c00;
-  --amber3: #ffd54f;
-  --red: #ff3d2e;
-  --green: #39ff6e;
-  --blue: #00cfff;
-  --muted: #5a4500;
-  --text: #d4a800;
-  --text2: #8a6a00;
-  --dim: #3a2a00;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --card: #f1f5f9;
+  --card2: #e2e8f0;
+  --border: #cbd5e1;
+  --border2: #94a3b8;
+  --amber: #ca8a04;
+  --amber2: #c2410c;
+  --amber3: #fde68a;
+  --red: #ef4444;
+  --green: #16a34a;
+  --blue: #0284c7;
+  --muted: #475569;
+  --text: #0f172a;
+  --text2: #475569;
+  --dim: #64748b;
+}
+
+html.light {
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --card: #f1f5f9;
+  --card2: #e2e8f0;
+  --border: #cbd5e1;
+  --border2: #94a3b8;
+  --amber: #ca8a04;
+  --amber2: #c2410c;
+  --amber3: #fde68a;
+  --red: #ef4444;
+  --green: #16a34a;
+  --blue: #0284c7;
+  --muted: #475569;
+  --text: #0f172a;
+  --text2: #475569;
+  --dim: #64748b;
+}
+
+html.dark {
+  --bg: #0f172a;
+  --surface: #0f172a;
+  --card: #111827;
+  --card2: #1f2937;
+  --border: #334155;
+  --border2: #475569;
+  --amber: #facc15;
+  --amber2: #f59e0b;
+  --amber3: #fde68a;
+  --red: #f87171;
+  --green: #4ade80;
+  --blue: #38bdf8;
+  --muted: #94a3b8;
+  --text: #f8fafc;
+  --text2: #cbd5e1;
+  --dim: #cbd5e1;
 }
 
 body {
