@@ -15,18 +15,6 @@ const NETWORK_OPTIONS: NetworkOption[] = [
     label: "Ethereum (ETH)",
     available: true,
     note: "Available now"
-  },
-  {
-    chain: "bsc",
-    label: "BNB Chain (BSC)",
-    available: false,
-    note: "Coming soon"
-  },
-  {
-    chain: "solana",
-    label: "Solana (SOL)",
-    available: false,
-    note: "Coming soon"
   }
 ];
 
@@ -64,7 +52,7 @@ export function NetworkSelector({ value, onChange }: Props) {
         ))}
       </select>
       <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-        Select Ethereum to track wallets now. BSC and Solana are displayed here so users know they are coming soon.
+        Only Ethereum is currently supported.
       </p>
     </div>
   );

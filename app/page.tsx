@@ -111,11 +111,9 @@ export default async function Home() {
              >
                Supported Networks
              </h2>
-             <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
-               <li>✅ Ethereum mainnet (full support)</li>
-               <li>⏳ BSC chain support — Q3 2026</li>
-               <li>⏳ Solana chain support — Q4 2026</li>
-             </ul>
+              <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
+                <li>✅ Ethereum mainnet (full support)</li>
+              </ul>
           </div>
         </section>
 

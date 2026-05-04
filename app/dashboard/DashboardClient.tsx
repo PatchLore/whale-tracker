@@ -298,13 +298,14 @@ export function DashboardClient({
       <BillingBanner />
 
       <div
-        className="mb-4 rounded-lg border border-amber-300/30 px-4 py-3 text-[10px] founding-banner"
+        className="mb-4 rounded-lg border border-amber-300/30 px-4 py-3 text-[10px]"
         style={{
           fontFamily: "var(--font-plex-mono)"
         }}
       >
         <div className="text-[11px] text-slate-700 dark:text-amber-100" style={{ color: "var(--text2)" }}>
-          🐋 Founding Member Deal — First 10 subscribers get BSC, Solana, Discord &amp; CSV export free when they launch · You&apos;re locked in at £9.99/mo
+          🐋 Early Supporter Access<br/>
+          You’ll receive access to new features and integrations as they are released.
         </div>
       </div>
 
