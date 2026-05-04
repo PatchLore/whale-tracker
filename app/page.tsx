@@ -105,60 +105,67 @@ export default async function Home() {
               borderColor: "var(--border2)"
             }}
           >
-            <h2
-              className="text-[11px] tracking-[0.3em] uppercase mb-3"
-              style={{ color: "var(--amber2)", fontFamily: "var(--font-orbitron)" }}
-            >
-              Founding Member Perks (First 10)
-            </h2>
-            <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
-              <li>• BSC chain support — coming soon</li>
-              <li>• Solana chain support — coming soon</li>
-              <li>• Discord webhook alerts — coming soon</li>
-              <li>• CSV export — coming soon</li>
-            </ul>
+             <h2
+               className="text-[11px] tracking-[0.3em] uppercase mb-3"
+               style={{ color: "var(--amber2)", fontFamily: "var(--font-orbitron)" }}
+             >
+               Supported Networks
+             </h2>
+             <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
+               <li>✅ Ethereum mainnet (full support)</li>
+               <li>⏳ BSC chain support — Q3 2026</li>
+               <li>⏳ Solana chain support — Q4 2026</li>
+             </ul>
           </div>
         </section>
 
-        <section className="mb-8 text-sm">
-          <h2
-            className="text-[11px] tracking-[0.3em] uppercase mb-3"
-            style={{ color: "var(--amber2)", fontFamily: "var(--font-orbitron)" }}
-          >
-            Pricing
-          </h2>
-          <div className="max-w-md">
-            <div
-              className="rounded-xl border px-4 py-4"
-              style={{
-                backgroundColor: "rgba(255,179,0,0.06)",
-                borderColor: "rgba(255,179,0,0.4)"
-              }}
-            >
-              <div className="flex items-baseline justify-between mb-2">
-                <span
-                  className="text-xs tracking-[0.25em] uppercase"
-                  style={{ color: "var(--amber)" }}
-                >
-                  Pro
-                </span>
-                <span
-                  className="text-lg font-semibold"
-                  style={{ color: "var(--amber)" }}
-                >
-                  £9.99/mo
-                </span>
-              </div>
-              <ul className="space-y-1 text-[12px]" style={{ color: "var(--text2)" }}>
-                <li>• Track up to 50 wallets</li>
-                <li>• 30s polling interval</li>
-                <li>• Whale detection & activity feed</li>
-                <li>• Instant Telegram alerts</li>
-                <li>• Founding member perks locked in free</li>
-              </ul>
-            </div>
-          </div>
-        </section>
+         <section className="mb-8 text-sm">
+           <h2
+             className="text-[11px] tracking-[0.3em] uppercase mb-3"
+             style={{ color: "var(--amber2)", fontFamily: "var(--font-orbitron)" }}
+           >
+             Get Started
+           </h2>
+           <div className="max-w-md">
+             <div
+               className="rounded-xl border px-4 py-4"
+               style={{
+                 backgroundColor: "rgba(255,179,0,0.06)",
+                 borderColor: "rgba(255,179,0,0.4)"
+               }}
+             >
+               <div className="mb-3">
+                 <span
+                   className="text-xs tracking-[0.25em] uppercase"
+                   style={{ color: "var(--amber)" }}
+                 >
+                   Available exclusively on Whop
+                 </span>
+               </div>
+               <ul className="space-y-1 text-[12px]" style={{ color: "var(--text2)" }}>
+                 <li>• Track up to 50 wallets</li>
+                 <li>• Checks for new transactions every 30 seconds</li>
+                 <li>• Intelligent whale detection with custom thresholds</li>
+                 <li>• Instant Telegram alerts for large moves</li>
+                 <li>• Clean real-time activity feed</li>
+               </ul>
+               <a
+                 href="https://whop.com/whalenet"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="mt-4 inline-block rounded-md px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em]"
+                 style={{
+                   backgroundImage:
+                     "linear-gradient(135deg, var(--amber), var(--amber2))",
+                   color: "var(--bg)",
+                   fontFamily: "var(--font-orbitron)"
+                 }}
+               >
+                 View Pricing on Whop
+               </a>
+             </div>
+           </div>
+         </section>
 
         <footer className="mt-auto pt-4 text-[11px]" style={{ color: "var(--dim)" }}>
           Built for traders who care about on-chain flows more than headlines.

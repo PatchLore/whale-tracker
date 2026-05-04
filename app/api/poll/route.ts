@@ -65,6 +65,8 @@ export async function POST(request: Request) {
     url.searchParams.set("startblock", "0");
     url.searchParams.set("endblock", "99999999");
     url.searchParams.set("sort", "desc");
+    url.searchParams.set("offset", "0");
+    url.searchParams.set("limit", "1000");
     url.searchParams.set("apikey", etherscanKey);
 
     const etherscanRes = await fetch(url.toString());
