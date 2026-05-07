@@ -72,12 +72,12 @@ export default async function Home() {
             >
               Live Intelligence
             </h2>
-            <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
-              <li>• Live polling of tracked wallets every 30 seconds</li>
-              <li>• Directional context on every move (incoming vs outgoing)</li>
-              <li>• Whale detection based on your custom ETH thresholds</li>
-              <li>• Up to 50 wallets tracked simultaneously</li>
-            </ul>
+              <ul className="space-y-2 text-[12px]" style={{ color: "var(--text2)" }}>
+                <li>• Live polling of tracked wallets every 60 seconds</li>
+                <li>• Directional context on every move (incoming vs outgoing)</li>
+                <li>• Whale detection based on your custom ETH thresholds</li>
+                <li>• Up to 10 wallets tracked simultaneously</li>
+              </ul>
           </div>
           <div
             className="rounded-xl border px-4 py-4"
@@ -140,13 +140,13 @@ export default async function Home() {
                    Available exclusively on Whop
                  </span>
                </div>
-               <ul className="space-y-1 text-[12px]" style={{ color: "var(--text2)" }}>
-                 <li>• Track up to 50 wallets</li>
-                 <li>• Checks for new transactions every 30 seconds</li>
-                 <li>• Intelligent whale detection with custom thresholds</li>
-                 <li>• Instant Telegram alerts for large moves</li>
-                 <li>• Clean real-time activity feed</li>
-               </ul>
+                <ul className="space-y-1 text-[12px]" style={{ color: "var(--text2)" }}>
+                  <li>• Track up to 10 wallets</li>
+                  <li>• Checks for new transactions every 60 seconds</li>
+                  <li>• Intelligent whale detection with custom thresholds</li>
+                  <li>• Instant Telegram alerts for large moves</li>
+                  <li>• Clean real-time activity feed</li>
+                </ul>
                <a
                  href="https://whop.com/whalenet"
                  target="_blank"

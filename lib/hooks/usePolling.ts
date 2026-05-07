@@ -25,17 +25,42 @@ export function usePolling({
   const timersRef = useRef<Record<string, number>>({});
   const [isPollingError, setIsPollingError] = useState(false);
   const failureCountRef = useRef(0);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof document !== "undefined") {
+      return !document.hidden;
+    }
+    return true;
+  });
+
+  // Track page visibility changes
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isReady) {
       return;
     }
 
-    const intervalMs = 30_000; // All users get pro polling
+    const intervalMs = 60_000; // All users get pro polling (60s to reduce API load)
 
     const activeWallets = wallets.filter(w => w.is_active);
 
     if (activeWallets.length === 0) {
+      return;
+    }
+
+    // Don't start polling if tab is hidden
+    if (!isVisible) {
       return;
     }
 
@@ -138,7 +163,9 @@ export function usePolling({
       void firePoll(wallet);
 
       const timerId = window.setInterval(() => {
-        void firePoll(wallet);
+        if (!document.hidden) {
+          void firePoll(wallet);
+        }
       }, intervalMs);
 
       timersRef.current[wallet.id] = timerId;
@@ -148,7 +175,7 @@ export function usePolling({
       Object.values(timersRef.current).forEach(id => window.clearInterval(id));
       timersRef.current = {};
     };
-  }, [wallets, isReady, telegramChatId, onNewTransactions, isPollingError]);
+  }, [wallets, isReady, telegramChatId, onNewTransactions, isPollingError, isVisible]);
 
   return { isPollingError };
 }

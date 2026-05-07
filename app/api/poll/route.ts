@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Transaction } from "@/types/supabase";
 
+// Lightweight in-memory rate guard: prevent duplicate rapid polls per wallet
+const lastPollTime = new Map<string, number>();
+const RATE_LIMIT_MS = 5000; // 5 seconds minimum between polls for same wallet
+
 type PollRequestBody = {
   walletId: string;
   address: string;
@@ -28,6 +32,28 @@ export async function POST(request: Request) {
         { error: "walletId and address are required" },
         { status: 400 }
       );
+    }
+
+    // Rate guard: check if same wallet was polled within last 5 seconds
+    const now = Date.now();
+    const lastTime = lastPollTime.get(walletId);
+    if (lastTime && (now - lastTime) < RATE_LIMIT_MS) {
+      console.log(`[poll] Rate limited for wallet ${walletId}, last poll ${now - lastTime}ms ago`);
+      return NextResponse.json(
+        { newTxns: 0, whaleAlerts: [], transactions: [] as Transaction[] },
+        { status: 200 }
+      );
+    }
+    lastPollTime.set(walletId, now);
+
+    // Cleanup old entries periodically (keep memory usage low)
+    if (lastPollTime.size > 100) {
+      const cutoff = now - 60000; // Remove entries older than 1 minute
+      for (const [key, time] of lastPollTime.entries()) {
+        if (time < cutoff) {
+          lastPollTime.delete(key);
+        }
+      }
     }
 
     const etherscanKey = process.env.ETHERSCAN_API_KEY;
@@ -69,132 +95,158 @@ export async function POST(request: Request) {
     url.searchParams.set("limit", "1000");
     url.searchParams.set("apikey", etherscanKey);
 
-    const etherscanRes = await fetch(url.toString());
-    if (!etherscanRes.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch from Etherscan" },
-        { status: 502 }
-      );
-    }
+    // Add timeout to prevent serverless function from hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const etherscanJson = (await etherscanRes.json()) as {
-      status: string;
-      message: string;
-      result: EtherscanTx[] | string;
-    };
-
-    console.log("[poll] etherscan status:", etherscanJson.status);
-    console.log("[poll] etherscan message:", etherscanJson.message);
-    console.log(
-      "[poll] transactions count:",
-      Array.isArray(etherscanJson.result)
-        ? etherscanJson.result.length
-        : etherscanJson.result
-    );
-
-    if (etherscanJson.status !== "1" || !Array.isArray(etherscanJson.result)) {
-      return NextResponse.json(
-        { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
-        { status: 200 }
-      );
-    }
-
-    const txList = etherscanJson.result as EtherscanTx[];
-    // Only consider the most recent 50 transactions to keep inserts manageable.
-    const txs = txList.slice(0, 50);
-
-    const supabase = createServerSupabaseClient();
-
-    // Fetch any existing hashes for this batch to avoid inserting duplicates.
-    const hashes = txs.map(tx => tx.hash);
-    const { data: existing, error: existingError } = await supabase
-      .from("transactions")
-      .select("hash")
-      .in("hash", hashes);
-
-    if (existingError) {
-      return NextResponse.json(
-        { error: existingError.message },
-        { status: 500 }
-      );
-    }
-
-    const existingSet = new Set((existing ?? []).map(row => row.hash as string));
-
-    const newRows = txs
-      .filter(tx => !existingSet.has(tx.hash))
-      .map(tx => {
-        const ethValue = Number(tx.value) / 1e18;
-        const isIncoming =
-          tx.to &&
-          address &&
-          tx.to.toLowerCase() === address.toLowerCase();
-        const direction: "incoming" | "outgoing" = isIncoming
-          ? "incoming"
-          : "outgoing";
-
-        const isWhale = ethValue >= threshold;
-
-        return {
-          wallet_id: walletId,
-          hash: tx.hash,
-          direction,
-          eth_value: ethValue,
-          from_address: tx.from,
-          to_address: tx.to,
-          block_timestamp: Number(tx.timeStamp),
-          is_whale: isWhale
-        };
+    try {
+      const etherscanRes = await fetch(url.toString(), {
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
-    console.log("[poll] new rows to insert:", newRows.length);
+      if (!etherscanRes.ok) {
+        return NextResponse.json(
+          { error: "Failed to fetch from Etherscan" },
+          { status: 502 }
+        );
+      }
 
-    if (newRows.length === 0) {
-      return NextResponse.json(
-        { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
-        { status: 200 }
+      const etherscanJson = (await etherscanRes.json()) as {
+        status: string;
+        message: string;
+        result: EtherscanTx[] | string;
+      };
+
+      console.log("[poll] etherscan status:", etherscanJson.status);
+      console.log("[poll] etherscan message:", etherscanJson.message);
+      console.log(
+        "[poll] transactions count:",
+        Array.isArray(etherscanJson.result)
+          ? etherscanJson.result.length
+          : etherscanJson.result
       );
-    }
 
-    // Insert in chunks to avoid exceeding limits on large batches.
-    const chunkSize = 25;
-    let allInserted: Transaction[] = [];
-    for (let i = 0; i < newRows.length; i += chunkSize) {
-      const chunk = newRows.slice(i, i + chunkSize);
-      // eslint-disable-next-line no-await-in-loop
-      const { data, error } = await supabase
+      if (etherscanJson.status !== "1" || !Array.isArray(etherscanJson.result)) {
+        return NextResponse.json(
+          { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
+          { status: 200 }
+        );
+      }
+
+      const txList = etherscanJson.result as EtherscanTx[];
+      // Only consider the most recent 50 transactions to keep inserts manageable.
+      const txs = txList.slice(0, 50);
+
+      const supabase = createServerSupabaseClient();
+
+      // Fetch any existing hashes for this batch to avoid inserting duplicates.
+      const hashes = txs.map(tx => tx.hash);
+      const { data: existing, error: existingError } = await supabase
         .from("transactions")
-        .insert(chunk)
-        .select("*");
-      if (error) {
-        console.error("[poll] chunk insert error:", error.message);
-        break;
-      }
-      if (data) {
-        allInserted = [...allInserted, ...(data as Transaction[])];
-      }
-    }
+        .select("hash")
+        .in("hash", hashes);
 
-    console.log("[poll] inserted count:", allInserted.length);
+      if (existingError) {
+        return NextResponse.json(
+          { error: existingError.message },
+          { status: 500 }
+        );
+      }
 
-    if (allInserted.length === 0) {
+      const existingSet = new Set((existing ?? []).map(row => row.hash as string));
+
+      const newRows = txs
+        .filter(tx => !existingSet.has(tx.hash))
+        .map(tx => {
+          const ethValue = Number(tx.value) / 1e18;
+          const isIncoming =
+            tx.to &&
+            address &&
+            tx.to.toLowerCase() === address.toLowerCase();
+          const direction: "incoming" | "outgoing" = isIncoming
+            ? "incoming"
+            : "outgoing";
+
+          const isWhale = ethValue >= threshold;
+
+          return {
+            wallet_id: walletId,
+            hash: tx.hash,
+            direction,
+            eth_value: ethValue,
+            from_address: tx.from,
+            to_address: tx.to,
+            block_timestamp: Number(tx.timeStamp),
+            is_whale: isWhale
+          };
+        });
+
+      console.log("[poll] new rows to insert:", newRows.length);
+
+      if (newRows.length === 0) {
+        return NextResponse.json(
+          { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
+          { status: 200 }
+        );
+      }
+
+      // Insert in chunks to avoid exceeding limits on large batches.
+      const chunkSize = 25;
+      let allInserted: Transaction[] = [];
+      for (let i = 0; i < newRows.length; i += chunkSize) {
+        const chunk = newRows.slice(i, i + chunkSize);
+        // eslint-disable-next-line no-await-in-loop
+        const { data, error } = await supabase
+          .from("transactions")
+          .insert(chunk)
+          .select("*");
+        if (error) {
+          console.error("[poll] chunk insert error:", error.message);
+          break;
+        }
+        if (data) {
+          allInserted = [...allInserted, ...(data as Transaction[])];
+        }
+      }
+
+      console.log("[poll] inserted count:", allInserted.length);
+
+      if (allInserted.length === 0) {
+        return NextResponse.json(
+          { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
+          { status: 200 }
+        );
+      }
+
+      const insertedTxns = allInserted;
+      const whaleAlerts = insertedTxns.filter(t => t.is_whale);
+
       return NextResponse.json(
-        { newTxns: 0, whaleAlerts: [], transactions: [] satisfies Transaction[] },
+        {
+          newTxns: insertedTxns.length,
+          whaleAlerts,
+          transactions: insertedTxns
+        },
         { status: 200 }
       );
+    } catch (fetchError) {
+      // Clear timeout on error
+      clearTimeout(timeoutId);
+      
+      // Check if this was an abort/timeout error
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
+        console.error("[poll] Etherscan request timed out after 10 seconds");
+        return NextResponse.json(
+          { error: "Etherscan API request timed out. Please try again." },
+          { status: 504 }
+        );
+      }
+      
+      // Re-throw other errors to be caught by outer try/catch
+      throw fetchError;
     }
-
-    const insertedTxns = allInserted;
-    const whaleAlerts = insertedTxns.filter(t => t.is_whale);
-
-    return NextResponse.json(
-      {
-        newTxns: insertedTxns.length,
-        whaleAlerts,
-        transactions: insertedTxns
-      },
-      { status: 200 }
-    );
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },

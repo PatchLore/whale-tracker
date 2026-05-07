@@ -147,7 +147,7 @@ export function DemoDashboard() {
     largestMove: Math.max(...transactions.map(t => t.eth_value ?? 0))
   };
 
-  const walletLimit = 50;
+  const walletLimit = 10;
   const telegramChatId = null;
 
   return (
@@ -265,8 +265,8 @@ function StatsBar({
   whaleAlerts: number;
   largestMove: number;
 }) {
-  const walletLimit = 50;
-  const pollInterval = "30s (simulated)";
+  const walletLimit = 10;
+  const pollInterval = "60s (simulated)";
 
   return (
     <section

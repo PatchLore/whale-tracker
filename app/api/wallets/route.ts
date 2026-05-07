@@ -114,6 +114,24 @@ export async function POST(request: NextRequest) {
   }
 
   const { supabase } = createSupabase(request);
+
+  // Check wallet limit (10 wallets per user)
+  const { count, error: countError } = await supabase
+    .from("wallets")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (countError) {
+    return NextResponse.json({ error: countError.message }, { status: 500 });
+  }
+
+  if ((count ?? 0) >= 10) {
+    return NextResponse.json(
+      { error: "Wallet limit reached (10 wallets)." },
+      { status: 400 }
+    );
+  }
+
   const { data, error } = await supabase
     .from("wallets")
     .insert({

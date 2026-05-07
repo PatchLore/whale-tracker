@@ -18,7 +18,7 @@ type DashboardClientProps = {
   initialTransactions?: Transaction[];
 };
 
-const PRO_LIMIT = 50;
+const PRO_LIMIT = 10;
 
 export function DashboardClient({
   userId,
@@ -464,7 +464,7 @@ function StatsBar({
   largestMove
 }: StatsBarProps) {
   const walletLimit = PRO_LIMIT;
-  const pollInterval = "30s";
+  const pollInterval = "60s";
 
   return (
     <section
@@ -495,7 +495,7 @@ function StatsBar({
       <StatCell
         label="POLL INTERVAL"
         value={pollInterval}
-        sub="30s live polling"
+        sub="60s live polling"
       />
     </section>
   );
@@ -612,13 +612,13 @@ function WalletRegistry({
               ))}
             </div>
           ) : wallets.length === 0 ? (
-            <p
-              className="py-5 text-center text-[10px]"
-              style={{ color: "var(--dim)" }}
-            >
-              No wallets added yet.{" "}
-              Add up to 50 wallets.
-            </p>
+             <p
+               className="py-5 text-center text-[10px]"
+               style={{ color: "var(--dim)" }}
+             >
+               No wallets added yet.{" "}
+               Add up to 10 wallets.
+             </p>
           ) : (
             wallets.map(w => (
               <WalletCard
